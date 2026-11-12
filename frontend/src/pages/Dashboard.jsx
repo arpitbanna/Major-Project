@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Clock, MapPin, Calendar } from 'lucide-react';
 import SummaryCards from '../components/dashboard/SummaryCards';
+import QuickActions from '../components/dashboard/QuickActions';
 import RecentActivity from '../components/dashboard/RecentActivity';
 
 export default function Dashboard() {
@@ -143,6 +144,9 @@ export default function Dashboard() {
         tablesInitialized={tablesInitialized}
         onRefresh={fetchDashboardData}
       />
+
+      {/* Operational Shortcuts / Quick Actions */}
+      <QuickActions />
 
       {/* Recent Activity Section */}
       <RecentActivity
