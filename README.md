@@ -33,11 +33,58 @@ The application supports four operational roles:
 | **Admin** | System management & setup | Full access, user role assignments, section master data |
 | **Mine Manager** | Statutory oversight & audit | View all logs, close hazards, verify mitigation actions, audit reports |
 | **Shift In-charge** | Shift-level operational management | Create and submit shift handovers, acknowledge incoming handovers, assign tasks |
-| **Supervisor** | Field inspection & equipment monitoring | Log machine downtime, report on-site hazards, view active safety orders |
+| **Supervisor** | Field inspection & equipment monitoring | Log machine downtime, report on-site hazards, create draft handovers |
 
 ---
 
-## 4. Project Directory Structure
+## 4. Digital Shift Handover Workflow (Phase 5)
+
+The handover module implements a statutory and operational 3-stage lifecycle:
+
+```text
+[Outgoing In-charge]
+       │
+       ▼
+1. Create Handover (Draft)
+   ├── Mine Section & Shift Date/Type
+   ├── Production & Tonnage Progress
+   ├── Equipment & Machinery Status
+   ├── Safety & Strata Atmospheric Observations
+   ├── Pending Tasks for Relieving Shift
+   └── Special Remarks
+       │
+       ▼
+2. Submit Handover (Submitted)
+   ├── Outgoing in-charge commits the record
+   ├── Timestamp recorded (submitted_at)
+   └── Log enters "Pending Acknowledgement" state
+       │
+       ▼
+[Incoming In-charge / Manager]
+       │
+       ▼
+3. Digital Acknowledgement & Sign-off (Acknowledged)
+   ├── Incoming in-charge inspects conditions on-site
+   ├── 4-Eyes Cross-Shift Rule: Outgoing creator cannot acknowledge own log
+   ├── Timestamp recorded (acknowledged_at)
+   └── Permanent Record Locking: Immutability enforced by backend and database trigger
+```
+
+### Handover REST API Endpoints
+
+| Method | Endpoint | Access | Purpose |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/handover` | Authenticated | List handovers with optional status, date, and section filters |
+| `GET` | `/api/handover/staff` | Authenticated | Retrieve active staff for assigning incoming shift in-charge |
+| `GET` | `/api/handover/:id` | Authenticated | View complete details of an individual handover log |
+| `POST` | `/api/handover` | Staff Roles | Create a new handover (Draft or Submitted directly) |
+| `PUT` | `/api/handover/:id` | Creator / Admin | Edit own draft handover (blocked if Submitted/Acknowledged) |
+| `POST` | `/api/handover/:id/submit` | Creator / Admin | Transition handover from Draft to Submitted |
+| `POST` | `/api/handover/:id/acknowledge` | Incoming / Manager | Digital sign-off, locks record permanently |
+
+---
+
+## 5. Project Directory Structure
 
 ```text
 Major Project/
@@ -46,13 +93,15 @@ Major Project/
 │   │   ├── config/
 │   │   │   └── supabase.js           # Supabase client configuration
 │   │   ├── db/
-│   │   │   └── schema.sql            # Database schema for user_profiles and triggers
+│   │   │   ├── schema.sql            # Master cumulative database schema
+│   │   │   └── shift_handovers.sql   # Shift handover tables, RLS & triggers
 │   │   ├── middleware/
 │   │   │   ├── auth.js               # JWT verification (requireAuth)
 │   │   │   └── roles.js              # Role authorization guard (requireRole)
 │   │   ├── routes/
 │   │   │   ├── auth.js               # Auth & profile verification endpoints
 │   │   │   ├── dashboard.js          # Live dashboard metrics & recent activity
+│   │   │   ├── handover.js           # Shift handover operational endpoints
 │   │   │   └── health.js             # API health check route
 │   │   └── app.js                    # Express app setup and middleware
 │   ├── .env.example                  # Backend environment template
@@ -77,7 +126,10 @@ Major Project/
 │   │   ├── context/
 │   │   │   └── AuthContext.jsx       # Session state, login, logout, profile
 │   │   ├── pages/
+│   │   │   ├── CreateHandover.jsx    # Outgoing shift handover form
 │   │   │   ├── Dashboard.jsx         # Operations & safety dashboard
+│   │   │   ├── HandoverDetail.jsx    # Handover review & acknowledgement
+│   │   │   ├── HandoverList.jsx      # Filterable shift handover logbook
 │   │   │   └── Login.jsx             # Minimalist industrial login form
 │   │   ├── App.jsx                   # Application routing and shell
 │   │   ├── index.css                 # Tailwind CSS styles
@@ -96,7 +148,7 @@ Major Project/
 
 ---
 
-## 5. Setup & Running Instructions
+## 6. Setup & Running Instructions
 
 ### Prerequisites
 - Node.js (v18.0 or later recommended)
@@ -121,8 +173,9 @@ Configure your Supabase credentials in both `.env` files:
 ### Step 2: Database Schema Setup
 Execute the SQL commands in `backend/src/db/schema.sql` in the Supabase SQL Editor:
 - Creates `public.user_profiles` table linked to Supabase Auth.
-- Enables Row Level Security (RLS).
-- Adds the `on_auth_user_created` trigger for automatic profile generation.
+- Creates `public.shift_handovers` table with constraints and indexes.
+- Enables Row Level Security (RLS) policies for records and roles.
+- Adds `prevent_acknowledged_handover_update` trigger to enforce record immutability.
 
 ### Step 3: Install Dependencies
 ```bash
@@ -145,7 +198,7 @@ cd backend
 npm run dev
 # Starts backend server at http://localhost:5000
 # Health check available at: http://localhost:5000/api/health
-# Auth status available at: http://localhost:5000/api/auth/status
+# Handover API available at: http://localhost:5000/api/handover
 ```
 
 **Tab 2: Frontend Server**
@@ -157,12 +210,12 @@ npm run dev
 
 ---
 
-## 6. Development Phases
+## 7. Development Phases
 
 - [x] **Phase 1:** Requirement Analysis & System Specification
 - [x] **Phase 2:** Project Setup, Shell Layout & Health Endpoint
 - [x] **Phase 3:** Authentication & Role-Based Access Control (Admin, Mine Manager, Shift In-charge, Supervisor)
-- [x] **Phase 4:** Dashboard & Shift Overview Metrics *(Current)*
-- [ ] **Phase 5:** Digital Shift Handover Module (Form, Records, Acknowledgment, PDF)
+- [x] **Phase 4:** Dashboard & Shift Overview Metrics
+- [x] **Phase 5:** Digital Shift Handover Module (Form, Records, Acknowledgment) *(Current)*
 - [ ] **Phase 6:** Safety Management Plan (SMP) & Hazard Register
-- [ ] **Phase 7:** Audit Trail, Final Polishing & Project Viva Documentation
+- [ ] **Phase 7:** Audit Trail, PDF Reports & Project Viva Documentation
