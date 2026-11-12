@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Clock, MapPin, Calendar } from 'lucide-react';
 import SummaryCards from '../components/dashboard/SummaryCards';
+import RecentActivity from '../components/dashboard/RecentActivity';
 
 export default function Dashboard() {
   const { user, profile, role } = useAuth();
@@ -12,8 +13,13 @@ export default function Dashboard() {
     openHazards: 0,
     pendingSafetyActions: 0,
   });
+  const [recentData, setRecentData] = useState({
+    handovers: [],
+    hazards: [],
+    pendingActions: []
+  });
   const [tablesInitialized, setTablesInitialized] = useState(false);
-  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // Determine current active shift based on 24-hour clock
   const getCurrentShift = () => {
@@ -27,26 +33,36 @@ export default function Dashboard() {
     }
   };
 
-  const fetchSummary = async () => {
-    setLoadingSummary(true);
+  const fetchDashboardData = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/dashboard/summary');
-      if (response.ok) {
-        const result = await response.json();
+      // Fetch summary
+      const summaryRes = await fetch('/api/dashboard/summary');
+      if (summaryRes.ok) {
+        const result = await summaryRes.json();
         if (result.data) {
           setSummaryData(result.data);
           setTablesInitialized(result.tablesInitialized);
         }
       }
+
+      // Fetch recent activity
+      const recentRes = await fetch('/api/dashboard/recent');
+      if (recentRes.ok) {
+        const result = await recentRes.json();
+        if (result.data) {
+          setRecentData(result.data);
+        }
+      }
     } catch (err) {
-      console.warn('[Dashboard] Could not fetch summary:', err.message);
+      console.warn('[Dashboard] Could not fetch data:', err.message);
     } finally {
-      setLoadingSummary(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchSummary();
+    fetchDashboardData();
   }, []);
 
   const currentShift = getCurrentShift();
@@ -123,9 +139,15 @@ export default function Dashboard() {
       {/* Summary Cards Section */}
       <SummaryCards
         data={summaryData}
-        loading={loadingSummary}
+        loading={loading}
         tablesInitialized={tablesInitialized}
-        onRefresh={fetchSummary}
+        onRefresh={fetchDashboardData}
+      />
+
+      {/* Recent Activity Section */}
+      <RecentActivity
+        recentData={recentData}
+        loading={loading}
       />
     </div>
   );
