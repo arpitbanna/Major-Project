@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import HandoverList from './pages/HandoverList';
 import CreateHandover from './pages/CreateHandover';
+import HandoverDetail from './pages/HandoverDetail';
 
 export default function App() {
   return (
@@ -29,6 +30,14 @@ export default function App() {
               element={
                 <ProtectedRoute allowedRoles={['Admin', 'Mine Manager', 'Shift In-charge', 'Supervisor']}>
                   <CreateHandover />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/handover/:id"
+              element={
+                <ProtectedRoute>
+                  <HandoverDetail />
                 </ProtectedRoute>
               }
             />
