@@ -20,50 +20,77 @@ The system addresses two core challenges:
 - **Frontend:** React, Vite, JavaScript, Tailwind CSS, Lucide React icons, React Router
 - **Backend:** Node.js, Express.js
 - **Database & Auth:** Supabase (PostgreSQL + Supabase Auth)
-- **Architecture:** Client-Server REST API architecture
+- **Architecture:** Client-Server REST API architecture with role authorization middleware
 
 ---
 
-## 3. Project Directory Structure
+## 3. User Roles & Permissions
+
+The application supports four operational roles:
+
+| Role | Responsibilities | Key Permissions |
+| :--- | :--- | :--- |
+| **Admin** | System management & setup | Full access, user role assignments, section master data |
+| **Mine Manager** | Statutory oversight & audit | View all logs, close hazards, verify mitigation actions, audit reports |
+| **Shift In-charge** | Shift-level operational management | Create and submit shift handovers, acknowledge incoming handovers, assign tasks |
+| **Supervisor** | Field inspection & equipment monitoring | Log machine downtime, report on-site hazards, view active safety orders |
+
+---
+
+## 4. Project Directory Structure
 
 ```text
 Major Project/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   └── supabase.js       # Supabase client configuration
+│   │   │   └── supabase.js           # Supabase client configuration
+│   │   ├── db/
+│   │   │   └── schema.sql            # Database schema for user_profiles and triggers
+│   │   ├── middleware/
+│   │   │   ├── auth.js               # JWT verification (requireAuth)
+│   │   │   └── roles.js              # Role authorization guard (requireRole)
 │   │   ├── routes/
-│   │   │   └── health.js         # API health check route
-│   │   └── app.js                # Express app setup and middleware
-│   ├── .env.example              # Backend environment template
-│   ├── .env                      # Local environment configuration
-│   ├── package.json              # Backend dependencies
-│   └── server.js                 # Server entry point
+│   │   │   ├── auth.js               # Auth & profile verification endpoints
+│   │   │   └── health.js             # API health check route
+│   │   └── app.js                    # Express app setup and middleware
+│   ├── .env.example                  # Backend environment template
+│   ├── .env                          # Local environment configuration
+│   ├── package.json                  # Backend dependencies
+│   └── server.js                     # Server entry point
 ├── frontend/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── common/
+│   │   │   │   └── ProtectedRoute.jsx# Role-guarded route wrapper
 │   │   │   └── layout/
-│   │   │       ├── AppLayout.jsx # Application layout wrapper
-│   │   │       ├── Header.jsx    # Top navigation bar
-│   │   │       └── Sidebar.jsx   # Responsive sidebar navigation
-│   │   ├── App.jsx               # Application entry and route shell
-│   │   ├── index.css             # Tailwind CSS styles
-│   │   └── main.jsx              # React DOM mounting
-│   ├── .env.example              # Frontend environment template
-│   ├── .env                      # Local environment configuration
-│   ├── index.html                # HTML entry
-│   ├── package.json              # Frontend dependencies
-│   ├── postcss.config.js         # PostCSS configuration
-│   ├── tailwind.config.js        # Tailwind industrial light theme
-│   └── vite.config.js            # Vite configuration with /api proxy
-├── .gitignore                    # Git ignore file
-├── package.json                  # Root runner script package
-└── README.md                     # Project documentation
+│   │   │       ├── AppLayout.jsx     # Application layout wrapper
+│   │   │       ├── Header.jsx        # Top navigation with user badge & logout
+│   │   │       └── Sidebar.jsx       # Responsive sidebar navigation
+│   │   ├── config/
+│   │   │   └── supabase.js           # Client-side Supabase authentication
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx       # Session state, login, logout, profile
+│   │   ├── pages/
+│   │   │   └── Login.jsx             # Minimalist industrial login form
+│   │   ├── App.jsx                   # Application routing and status screen
+│   │   ├── index.css                 # Tailwind CSS styles
+│   │   └── main.jsx                  # React DOM mounting
+│   ├── .env.example                  # Frontend environment template
+│   ├── .env                          # Local environment configuration
+│   ├── index.html                    # HTML entry
+│   ├── package.json                  # Frontend dependencies
+│   ├── postcss.config.js             # PostCSS configuration
+│   ├── tailwind.config.js            # Tailwind industrial light theme
+│   └── vite.config.js                # Vite configuration with /api proxy
+├── .gitignore                        # Git ignore file
+├── package.json                      # Root runner script package
+└── README.md                         # Project documentation
 ```
 
 ---
 
-## 4. Setup & Running Instructions
+## 5. Setup & Running Instructions
 
 ### Prerequisites
 - Node.js (v18.0 or later recommended)
@@ -81,11 +108,17 @@ cp frontend/.env.example frontend/.env
 ```
 
 Configure your Supabase credentials in both `.env` files:
-- `SUPABASE_URL`: Your Supabase project URL (e.g., `https://xyzcompany.supabase.co`)
+- `SUPABASE_URL`: Your Supabase project URL (`https://xyzcompany.supabase.co`)
 - `SUPABASE_ANON_KEY`: Supabase Anonymous public API key
 - `SUPABASE_SERVICE_ROLE_KEY`: Supabase Service Role key (backend only)
 
-### Step 2: Install Dependencies
+### Step 2: Database Schema Setup
+Execute the SQL commands in `backend/src/db/schema.sql` in the Supabase SQL Editor:
+- Creates `public.user_profiles` table linked to Supabase Auth.
+- Enables Row Level Security (RLS).
+- Adds the `on_auth_user_created` trigger for automatic profile generation.
+
+### Step 3: Install Dependencies
 ```bash
 # Backend dependencies
 cd backend
@@ -96,7 +129,7 @@ cd ../frontend
 npm install
 ```
 
-### Step 3: Run the Development Servers
+### Step 4: Run the Development Servers
 
 Open two terminal tabs:
 
@@ -106,6 +139,7 @@ cd backend
 npm run dev
 # Starts backend server at http://localhost:5000
 # Health check available at: http://localhost:5000/api/health
+# Auth status available at: http://localhost:5000/api/auth/status
 ```
 
 **Tab 2: Frontend Server**
@@ -117,11 +151,11 @@ npm run dev
 
 ---
 
-## 5. Development Phases
+## 6. Development Phases
 
 - [x] **Phase 1:** Requirement Analysis & System Specification
-- [x] **Phase 2:** Project Setup, Shell Layout & Health Endpoint *(Current)*
-- [ ] **Phase 3:** Authentication & Role-Based Access Control (Admin, Mine Manager, Shift In-charge, Supervisor)
+- [x] **Phase 2:** Project Setup, Shell Layout & Health Endpoint
+- [x] **Phase 3:** Authentication & Role-Based Access Control (Admin, Mine Manager, Shift In-charge, Supervisor) *(Current)*
 - [ ] **Phase 4:** Dashboard & Shift Overview Metrics
 - [ ] **Phase 5:** Digital Shift Handover Module (Form, Records, Acknowledgment, PDF)
 - [ ] **Phase 6:** Safety Management Plan (SMP) & Hazard Register
