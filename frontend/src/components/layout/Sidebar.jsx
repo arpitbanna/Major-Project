@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, ShieldAlert, FileBarChart, X } from 'lucide-react';
+import { LayoutDashboard, FileText, ShieldAlert, FileBarChart, X, User } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const navigationItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -10,6 +11,8 @@ const navigationItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
+  const { user, profile, role } = useAuth();
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -69,10 +72,30 @@ export default function Sidebar({ isOpen, onClose }) {
           })}
         </nav>
 
-        {/* Footer info */}
-        <div className="p-4 border-t border-borderLight text-xs text-slateText-secondary">
-          <p className="font-medium text-slateText">CMPDI Problem Statement</p>
-          <p className="text-[11px] text-slateText-muted mt-0.5">Coal Mine Safety System v1.0</p>
+        {/* Footer info & User section */}
+        <div className="p-4 border-t border-borderLight text-xs text-slateText-secondary space-y-2">
+          {user ? (
+            <div className="bg-slate-50 border border-borderLight p-2.5 rounded">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                  <User className="w-3.5 h-3.5" />
+                </div>
+                <div className="truncate">
+                  <p className="font-medium text-slateText truncate text-[11px]">
+                    {profile?.full_name || user.email}
+                  </p>
+                  <p className="text-[10px] text-slateText-muted truncate">
+                    {role} • {profile?.mine_section || 'General'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="font-medium text-slateText">CMPDI Problem Statement</p>
+              <p className="text-[11px] text-slateText-muted mt-0.5">Coal Mine Safety System v1.0</p>
+            </div>
+          )}
         </div>
       </aside>
     </>
