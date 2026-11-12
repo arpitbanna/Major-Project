@@ -5,6 +5,7 @@ import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import HandoverList from './pages/HandoverList';
 
 export default function App() {
   return (
@@ -18,10 +19,7 @@ export default function App() {
               path="/handover"
               element={
                 <ProtectedRoute>
-                  <div className="bg-white border border-borderLight rounded p-6 text-sm text-slateText-secondary space-y-2">
-                    <h2 className="text-base font-semibold text-slateText">Digital Shift Handover Module</h2>
-                    <p>Protected area for creating, viewing, and acknowledging shift logs. Scheduled for Phase 5.</p>
-                  </div>
+                  <HandoverList />
                 </ProtectedRoute>
               }
             />
