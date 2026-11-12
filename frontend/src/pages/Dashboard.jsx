@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Clock, MapPin, Calendar, HardHat } from 'lucide-react';
+import { Clock, MapPin, Calendar } from 'lucide-react';
+import SummaryCards from '../components/dashboard/SummaryCards';
 
 export default function Dashboard() {
   const { user, profile, role } = useAuth();
+
+  const [summaryData, setSummaryData] = useState({
+    todayHandovers: 0,
+    pendingAcknowledgements: 0,
+    openHazards: 0,
+    pendingSafetyActions: 0,
+  });
+  const [tablesInitialized, setTablesInitialized] = useState(false);
+  const [loadingSummary, setLoadingSummary] = useState(true);
 
   // Determine current active shift based on 24-hour clock
   const getCurrentShift = () => {
@@ -16,6 +26,28 @@ export default function Dashboard() {
       return { name: 'Shift 3 (Night)', time: '22:00 – 06:00', code: 'S3' };
     }
   };
+
+  const fetchSummary = async () => {
+    setLoadingSummary(true);
+    try {
+      const response = await fetch('/api/dashboard/summary');
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          setSummaryData(result.data);
+          setTablesInitialized(result.tablesInitialized);
+        }
+      }
+    } catch (err) {
+      console.warn('[Dashboard] Could not fetch summary:', err.message);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummary();
+  }, []);
 
   const currentShift = getCurrentShift();
   const todayFormatted = new Date().toLocaleDateString('en-IN', {
@@ -88,10 +120,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Placeholder container for Tasks 2, 3, and 4 */}
-      <div id="dashboard-content" className="space-y-6">
-        {/* Will be populated in subsequent tasks */}
-      </div>
+      {/* Summary Cards Section */}
+      <SummaryCards
+        data={summaryData}
+        loading={loadingSummary}
+        tablesInitialized={tablesInitialized}
+        onRefresh={fetchSummary}
+      />
     </div>
   );
 }
