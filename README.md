@@ -52,6 +52,7 @@ Major Project/
 │   │   │   └── roles.js              # Role authorization guard (requireRole)
 │   │   ├── routes/
 │   │   │   ├── auth.js               # Auth & profile verification endpoints
+│   │   │   ├── dashboard.js          # Live dashboard metrics & recent activity
 │   │   │   └── health.js             # API health check route
 │   │   └── app.js                    # Express app setup and middleware
 │   ├── .env.example                  # Backend environment template
@@ -63,17 +64,22 @@ Major Project/
 │   │   ├── components/
 │   │   │   ├── common/
 │   │   │   │   └── ProtectedRoute.jsx# Role-guarded route wrapper
+│   │   │   ├── dashboard/
+│   │   │   │   ├── QuickActions.jsx  # Operational navigation shortcuts
+│   │   │   │   ├── RecentActivity.jsx# Live shift logs & hazard feed
+│   │   │   │   └── SummaryCards.jsx  # Operational counts & indicators
 │   │   │   └── layout/
 │   │   │       ├── AppLayout.jsx     # Application layout wrapper
 │   │   │       ├── Header.jsx        # Top navigation with user badge & logout
-│   │   │       └── Sidebar.jsx       # Responsive sidebar navigation
+│   │   │       └── Sidebar.jsx       # Role-based sidebar navigation
 │   │   ├── config/
 │   │   │   └── supabase.js           # Client-side Supabase authentication
 │   │   ├── context/
 │   │   │   └── AuthContext.jsx       # Session state, login, logout, profile
 │   │   ├── pages/
+│   │   │   ├── Dashboard.jsx         # Operations & safety dashboard
 │   │   │   └── Login.jsx             # Minimalist industrial login form
-│   │   ├── App.jsx                   # Application routing and status screen
+│   │   ├── App.jsx                   # Application routing and shell
 │   │   ├── index.css                 # Tailwind CSS styles
 │   │   └── main.jsx                  # React DOM mounting
 │   ├── .env.example                  # Frontend environment template
@@ -155,8 +161,8 @@ npm run dev
 
 - [x] **Phase 1:** Requirement Analysis & System Specification
 - [x] **Phase 2:** Project Setup, Shell Layout & Health Endpoint
-- [x] **Phase 3:** Authentication & Role-Based Access Control (Admin, Mine Manager, Shift In-charge, Supervisor) *(Current)*
-- [ ] **Phase 4:** Dashboard & Shift Overview Metrics
+- [x] **Phase 3:** Authentication & Role-Based Access Control (Admin, Mine Manager, Shift In-charge, Supervisor)
+- [x] **Phase 4:** Dashboard & Shift Overview Metrics *(Current)*
 - [ ] **Phase 5:** Digital Shift Handover Module (Form, Records, Acknowledgment, PDF)
 - [ ] **Phase 6:** Safety Management Plan (SMP) & Hazard Register
 - [ ] **Phase 7:** Audit Trail, Final Polishing & Project Viva Documentation
