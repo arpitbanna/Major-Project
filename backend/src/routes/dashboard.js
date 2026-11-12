@@ -15,56 +15,64 @@ router.get('/summary', async (req, res) => {
     pendingSafetyActions: 0,
   };
 
-  let tablesInitialized = false;
+  let handoversTableReady = false;
+  let hazardsTableReady = false;
 
   if (isConfigured && supabase) {
+    // 1. Shift Handovers count (Phase 5)
     try {
       const today = new Date().toISOString().split('T')[0];
 
-      // 1. Today's Shift Handovers count
       const { count: todayCount, error: todayErr } = await supabase
         .from('shift_handovers')
         .select('*', { count: 'exact', head: true })
         .eq('shift_date', today);
 
-      // 2. Pending Acknowledgements count (Submitted but not yet acknowledged)
       const { count: pendingAckCount, error: pendingErr } = await supabase
         .from('shift_handovers')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Submitted');
 
-      // 3. Open Hazards count
+      if (!todayErr && !pendingErr) {
+        handoversTableReady = true;
+        summary.todayHandovers = todayCount || 0;
+        summary.pendingAcknowledgements = pendingAckCount || 0;
+      }
+    } catch (err) {
+      console.warn('[Dashboard Summary] Handover query note:', err.message);
+    }
+
+    // 2. Hazards & SMP count (Phase 6)
+    try {
       const { count: openHazardsCount, error: hazardsErr } = await supabase
         .from('hazards_smp')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Open');
 
-      // 4. Pending Safety Actions count
       const { count: pendingActionsCount, error: actionsErr } = await supabase
         .from('hazards_smp')
         .select('*', { count: 'exact', head: true })
         .neq('status', 'Closed');
 
-      // If no table errors occurred, mark tables as initialized
-      if (!todayErr && !pendingErr && !hazardsErr) {
-        tablesInitialized = true;
-        summary.todayHandovers = todayCount || 0;
-        summary.pendingAcknowledgements = pendingAckCount || 0;
+      if (!hazardsErr) {
+        hazardsTableReady = true;
         summary.openHazards = openHazardsCount || 0;
         summary.pendingSafetyActions = pendingActionsCount || 0;
       }
     } catch (err) {
-      console.warn('[Dashboard Summary] Query fallback:', err.message);
+      console.warn('[Dashboard Summary] Hazards query note:', err.message);
     }
   }
 
   res.status(200).json({
     status: 'ok',
     data: summary,
-    tablesInitialized,
-    message: tablesInitialized
-      ? 'Summary counts fetched from database'
-      : 'Live records ready. Operational log tables scheduled for creation in Phase 5 and 6.'
+    tablesInitialized: handoversTableReady,
+    handoversTableReady,
+    hazardsTableReady,
+    message: handoversTableReady
+      ? 'Live shift handover counts retrieved from database'
+      : 'Ready. Tables will be populated during daily shift operations.'
   });
 });
 
@@ -79,41 +87,52 @@ router.get('/recent', async (req, res) => {
     pendingActions: []
   };
 
-  let tablesInitialized = false;
+  let handoversTableReady = false;
+  let hazardsTableReady = false;
 
   if (isConfigured && supabase) {
+    // 1. Fetch up to 5 recent handovers (Phase 5)
     try {
-      // Fetch up to 5 recent handovers
       const { data: handovers, error: hErr } = await supabase
         .from('shift_handovers')
-        .select('id, shift_date, shift_type, status, submitted_at, acknowledged_at')
-        .order('submitted_at', { ascending: false })
+        .select('id, shift_date, shift_type, status, submitted_at, acknowledged_at, created_at')
+        .order('created_at', { ascending: false })
         .limit(5);
 
-      // Fetch up to 5 recent hazards
+      if (!hErr) {
+        handoversTableReady = true;
+        recentData.handovers = handovers || [];
+      }
+    } catch (err) {
+      console.warn('[Dashboard Recent] Handover feed note:', err.message);
+    }
+
+    // 2. Fetch up to 5 recent hazards (Phase 6)
+    try {
       const { data: hazards, error: hzErr } = await supabase
         .from('hazards_smp')
         .select('id, title, hazard_category, risk_score, status, created_at')
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (!hErr && !hzErr) {
-        tablesInitialized = true;
-        recentData.handovers = handovers || [];
+      if (!hzErr) {
+        hazardsTableReady = true;
         recentData.hazards = hazards || [];
       }
     } catch (err) {
-      console.warn('[Dashboard Recent] Query fallback:', err.message);
+      console.warn('[Dashboard Recent] Hazard feed note:', err.message);
     }
   }
 
   res.status(200).json({
     status: 'ok',
     data: recentData,
-    tablesInitialized,
-    message: tablesInitialized
-      ? 'Recent activities fetched from database'
-      : 'No activity records found. Tables will be populated during shift operations.'
+    tablesInitialized: handoversTableReady,
+    handoversTableReady,
+    hazardsTableReady,
+    message: handoversTableReady
+      ? 'Recent shift handovers retrieved from database'
+      : 'No activity records found yet. Handover records will appear here.'
   });
 });
 

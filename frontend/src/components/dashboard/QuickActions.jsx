@@ -7,12 +7,12 @@ export default function QuickActions() {
     {
       title: 'New Shift Handover',
       subtitle: 'Create outgoing shift log entry',
-      path: '/handover',
+      path: '/handover/new',
       icon: PlusCircle,
       iconColor: 'text-primary',
       iconBg: 'bg-blue-50',
-      badge: 'Phase 5 Form',
-      badgeStyle: 'bg-blue-50 text-primary border-blue-200',
+      badge: 'Available',
+      badgeStyle: 'bg-emerald-50 text-status-success border-emerald-200',
     },
     {
       title: 'View Shift Logs',
@@ -21,7 +21,7 @@ export default function QuickActions() {
       icon: FileText,
       iconColor: 'text-slateText',
       iconBg: 'bg-slate-100',
-      badge: 'Protected',
+      badge: 'Logbook',
       badgeStyle: 'bg-slate-100 text-slateText-secondary border-borderLight',
     },
     {
