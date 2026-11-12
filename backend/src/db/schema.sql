@@ -66,3 +66,110 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
+-- ============================================================================
+-- SHIFT HANDOVER MODULE (Phase 5)
+-- ============================================================================
+
+-- 4. Create Shift Handovers Table
+CREATE TABLE IF NOT EXISTS public.shift_handovers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mine_section TEXT NOT NULL,
+  shift_date DATE NOT NULL,
+  shift_type TEXT NOT NULL CHECK (shift_type IN ('Shift 1 (Morning)', 'Shift 2 (Afternoon)', 'Shift 3 (Night)')),
+  outgoing_incharge_id UUID NOT NULL REFERENCES public.user_profiles(id) ON DELETE RESTRICT,
+  incoming_incharge_id UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+  
+  production_summary TEXT,
+  equipment_status TEXT,
+  safety_observations TEXT,
+  pending_work TEXT,
+  remarks TEXT,
+  
+  status TEXT NOT NULL DEFAULT 'Draft' CHECK (status IN ('Draft', 'Submitted', 'Acknowledged')),
+  
+  submitted_at TIMESTAMPTZ,
+  acknowledged_at TIMESTAMPTZ,
+  acknowledged_by_id UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Indexes for Performance & Search Queries
+CREATE INDEX IF NOT EXISTS idx_shift_handovers_date ON public.shift_handovers(shift_date);
+CREATE INDEX IF NOT EXISTS idx_shift_handovers_status ON public.shift_handovers(status);
+CREATE INDEX IF NOT EXISTS idx_shift_handovers_section ON public.shift_handovers(mine_section);
+CREATE INDEX IF NOT EXISTS idx_shift_handovers_outgoing ON public.shift_handovers(outgoing_incharge_id);
+CREATE INDEX IF NOT EXISTS idx_shift_handovers_incoming ON public.shift_handovers(incoming_incharge_id);
+
+-- 6. Enable Row Level Security (RLS)
+ALTER TABLE public.shift_handovers ENABLE ROW LEVEL SECURITY;
+
+-- Policy: All authenticated users can view shift handovers
+DROP POLICY IF EXISTS "Authenticated users can view shift handovers" ON public.shift_handovers;
+CREATE POLICY "Authenticated users can view shift handovers"
+  ON public.shift_handovers
+  FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+-- Policy: Authorized mining personnel can create shift handovers
+DROP POLICY IF EXISTS "Authorized staff can insert handovers" ON public.shift_handovers;
+CREATE POLICY "Authorized staff can insert handovers"
+  ON public.shift_handovers
+  FOR INSERT
+  WITH CHECK (
+    auth.uid() = outgoing_incharge_id AND
+    EXISTS (
+      SELECT 1 FROM public.user_profiles
+      WHERE id = auth.uid() AND role IN ('Admin', 'Mine Manager', 'Shift In-charge', 'Supervisor')
+    )
+  );
+
+-- Policy: Outgoing in-charge can update their own draft handovers
+DROP POLICY IF EXISTS "Creator can update draft handovers" ON public.shift_handovers;
+CREATE POLICY "Creator can update draft handovers"
+  ON public.shift_handovers
+  FOR UPDATE
+  USING (
+    auth.uid() = outgoing_incharge_id AND status = 'Draft'
+  )
+  WITH CHECK (
+    auth.uid() = outgoing_incharge_id AND status IN ('Draft', 'Submitted')
+  );
+
+-- Policy: Incoming in-charge or Admin/Manager can acknowledge submitted handovers
+DROP POLICY IF EXISTS "Incoming incharge can acknowledge submitted handovers" ON public.shift_handovers;
+CREATE POLICY "Incoming incharge can acknowledge submitted handovers"
+  ON public.shift_handovers
+  FOR UPDATE
+  USING (
+    status = 'Submitted' AND (
+      auth.uid() = incoming_incharge_id OR
+      EXISTS (
+        SELECT 1 FROM public.user_profiles
+        WHERE id = auth.uid() AND role IN ('Admin', 'Mine Manager', 'Shift In-charge')
+      )
+    )
+  )
+  WITH CHECK (
+    status = 'Acknowledged'
+  );
+
+-- 7. Trigger to Enforce Immutability Once Acknowledged
+CREATE OR REPLACE FUNCTION public.prevent_acknowledged_handover_update()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.status = 'Acknowledged' THEN
+    RAISE EXCEPTION 'Statutory record locked: Acknowledged shift handovers cannot be modified.';
+  END IF;
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_prevent_acknowledged_handover_update ON public.shift_handovers;
+CREATE TRIGGER trg_prevent_acknowledged_handover_update
+  BEFORE UPDATE ON public.shift_handovers
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_acknowledged_handover_update();
