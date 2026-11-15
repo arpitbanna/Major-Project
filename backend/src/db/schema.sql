@@ -1,7 +1,46 @@
 -- ============================================================================
 -- COAL MINE PRODUCTIVITY & SAFETY MANAGEMENT SYSTEM
--- Database Schema for User Roles & Profiles (Phase 3)
+-- Master Database Schema
+-- Includes User Profiles, Real-World Coal Mines Catalog, Shift Handovers,
+-- DGMS Safety Management Plan (SMP), Corrective Actions, and Audit Locks.
 -- ============================================================================
+
+-- ============================================================================
+-- 0. REAL-WORLD COAL MINES CATALOG
+-- Populated from MSHA / USGS Official Mines and Mineral Resources Dataset
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.coal_mines (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  mine_id VARCHAR(50) UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  company_name TEXT,
+  mine_plant TEXT,
+  mine_type TEXT NOT NULL CHECK (mine_type IN ('Underground', 'Surface', 'Anthracite', 'Processing / Beneficiation')),
+  naics_description TEXT,
+  sic_code VARCHAR(20),
+  city TEXT,
+  state VARCHAR(10),
+  county TEXT,
+  address TEXT,
+  latitude NUMERIC(10, 6),
+  longitude NUMERIC(10, 6),
+  status TEXT DEFAULT 'Active',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_coal_mines_mine_id ON public.coal_mines(mine_id);
+CREATE INDEX IF NOT EXISTS idx_coal_mines_type ON public.coal_mines(mine_type);
+CREATE INDEX IF NOT EXISTS idx_coal_mines_state ON public.coal_mines(state);
+CREATE INDEX IF NOT EXISTS idx_coal_mines_company ON public.coal_mines(company_name);
+
+ALTER TABLE public.coal_mines ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public and authenticated read on coal_mines" ON public.coal_mines;
+CREATE POLICY "Allow public and authenticated read on coal_mines"
+  ON public.coal_mines
+  FOR SELECT
+  USING (true);
 
 -- 1. Create User Profiles Table
 -- Linked directly to Supabase Auth's built-in auth.users table

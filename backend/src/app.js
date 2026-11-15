@@ -11,6 +11,7 @@ const smpRoutes = require('./routes/smp');
 const reportRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
 const erpRoutes = require('./routes/erp');
+const mineRoutes = require('./routes/mines');
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.use('/api/smp', smpRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/erp', erpRoutes);
+app.use('/api/mines', mineRoutes);
 
 // 404 Handler
 app.use((req, res) => {

@@ -8,6 +8,8 @@
     "dev:frontend": "cd frontend && npm run dev",
     "start:backend": "cd backend && npm start",
     "build:frontend": "cd frontend && npm run build",
+    "seed": "cd backend && npm run seed",
+    "seed:mines": "cd backend && npm run seed:mines",
     "test": "cd backend && npm test && cd ../frontend && npm test"
   },
   "keywords": [

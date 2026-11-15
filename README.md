@@ -140,8 +140,15 @@ VITE_API_URL=/api
 
 ### Step 2: Database Schema & Seed Data Setup
 1. Open your **Supabase Dashboard** -> **SQL Editor**.
-2. Run `backend/src/db/schema.sql` to create all tables, indexes, RLS policies, and immutability triggers.
-3. Run `backend/src/db/seed.sql` (or run `npm run seed` in `backend`) to provision the 4 demo accounts and realistic mining data.
+2. Run `backend/src/db/schema.sql` to create all tables (including the `coal_mines` catalog), indexes, RLS policies, and immutability triggers.
+3. Run `backend/src/db/seed_mines.sql` to populate all 1,685 authentic real-world coal mining facilities from the official MSHA/USGS Mines and Mineral Resources dataset.
+4. Run `backend/src/db/seed.sql` (or run `npm run seed` in `backend`) to provision the 4 demo accounts and realistic mining data.
+
+> **Tip:** You can also seed via terminal:
+> ```bash
+> npm run seed        # Provisions demo accounts and shift handovers
+> npm run seed:mines  # Populates real-world coal mines dataset
+> ```
 
 ### Step 3: Install Dependencies & Run
 ```bash
