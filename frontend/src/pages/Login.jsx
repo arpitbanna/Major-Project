@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LogIn, Eye, EyeOff, AlertCircle, ShieldAlert, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usePageTitle } from '../utils/usePageTitle';
+import CoalSafeLogo from '../components/common/CoalSafeLogo';
 
 export default function Login() {
+  usePageTitle('Sign In');
   const { login, loginWithGoogle, isConfigured, user } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,6 +61,7 @@ export default function Login() {
     setSubmitting(true);
     try {
       await login(email, password);
+      toast.success('Signed in successfully');
       navigate(from, { replace: true });
     } catch (err) {
       setErrorMessage(err.message || 'Login failed. Please check your credentials.');
@@ -89,10 +95,12 @@ export default function Login() {
       <div className="w-full max-w-md bg-white border border-borderLight rounded p-6 sm:p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-1">
-          <div className="w-10 h-10 mx-auto rounded bg-primary text-white flex items-center justify-center font-bold text-base mb-2">
-            CM
+          <div className="flex justify-center mb-3">
+            <CoalSafeLogo size={52} />
           </div>
-          <h2 className="text-xl font-bold text-slateText">Sign in to Coal Mine System</h2>
+          <h2 className="text-xl font-bold text-slateText tracking-tight">
+            Sign in to Coal<span className="text-primary">Safe</span>
+          </h2>
           <p className="text-xs text-slateText-secondary">
             Ministry of Coal / CMPDI — Shift & Safety Management
           </p>
@@ -248,6 +256,7 @@ export default function Login() {
                 setEmail('admin@colliery.in');
                 setPassword('CoalSafe@2026');
                 setErrorMessage('');
+                toast.info('Filled Admin test credentials');
               }}
               className="p-2 border border-borderLight hover:border-purple-300 rounded text-left hover:bg-purple-50 transition-colors"
             >
@@ -261,6 +270,7 @@ export default function Login() {
                 setEmail('manager@colliery.in');
                 setPassword('CoalSafe@2026');
                 setErrorMessage('');
+                toast.info('Filled Mine Manager test credentials');
               }}
               className="p-2 border border-borderLight hover:border-blue-300 rounded text-left hover:bg-blue-50 transition-colors"
             >
@@ -274,6 +284,7 @@ export default function Login() {
                 setEmail('incharge@colliery.in');
                 setPassword('CoalSafe@2026');
                 setErrorMessage('');
+                toast.info('Filled Shift In-charge test credentials');
               }}
               className="p-2 border border-borderLight hover:border-emerald-300 rounded text-left hover:bg-emerald-50 transition-colors"
             >
@@ -287,6 +298,7 @@ export default function Login() {
                 setEmail('supervisor@colliery.in');
                 setPassword('CoalSafe@2026');
                 setErrorMessage('');
+                toast.info('Filled Supervisor test credentials');
               }}
               className="p-2 border border-borderLight hover:border-slate-300 rounded text-left hover:bg-slate-50 transition-colors"
             >

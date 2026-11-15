@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../utils/api';
+import { usePageTitle } from '../utils/usePageTitle';
 import {
   ShieldAlert,
   Plus,
@@ -17,6 +18,7 @@ import {
 import RiskMatrix from '../components/smp/RiskMatrix';
 
 export default function SmpList() {
+  usePageTitle('Safety Management Plan');
   const { session } = useAuth();
 
   const [hazards, setHazards] = useState([]);

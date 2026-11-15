@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../utils/api';
+import { usePageTitle } from '../utils/usePageTitle';
 import {
   FileText,
   PlusCircle,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 export default function HandoverList() {
+  usePageTitle('Shift Handover');
   const { session, role } = useAuth();
   const [handovers, setHandovers] = useState([]);
   const [loading, setLoading] = useState(true);

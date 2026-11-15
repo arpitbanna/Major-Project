@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../utils/api';
+import { usePageTitle } from '../utils/usePageTitle';
 import { Clock, MapPin, Calendar } from 'lucide-react';
 import SummaryCards from '../components/dashboard/SummaryCards';
 import QuickActions from '../components/dashboard/QuickActions';
 import RecentActivity from '../components/dashboard/RecentActivity';
 
 export default function Dashboard() {
+  usePageTitle('Dashboard');
   const { user, profile, role, session } = useAuth();
 
   const [summaryData, setSummaryData] = useState({

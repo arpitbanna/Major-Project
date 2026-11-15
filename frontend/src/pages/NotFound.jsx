@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileQuestion, ArrowLeft } from 'lucide-react';
+import { usePageTitle } from '../utils/usePageTitle';
 
 export default function NotFound() {
+  usePageTitle('Page Not Found');
   return (
     <div className="bg-white border border-borderLight rounded p-8 max-w-lg mx-auto my-12 text-center space-y-4 shadow-sm">
       <div className="w-12 h-12 rounded-full bg-slate-100 border border-borderLight flex items-center justify-center mx-auto text-slateText-secondary">

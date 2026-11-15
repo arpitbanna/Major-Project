@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usePageTitle } from '../utils/usePageTitle';
 import {
   FileText,
   Download,
@@ -12,7 +14,9 @@ import {
 } from 'lucide-react';
 
 export default function Reports() {
+  usePageTitle('Reports & Audits');
   const { session } = useAuth();
+  const toast = useToast();
   const [downloading, setDownloading] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -49,9 +53,11 @@ export default function Reports() {
       a.remove();
       window.URL.revokeObjectURL(url);
       setSuccess(`Report "${defaultFilename}" generated successfully.`);
+      toast.success(`Generated and downloaded ${defaultFilename}`);
     } catch (err) {
       console.error('[Reports] Download error:', err.message);
       setError(err.message);
+      toast.error(err.message || 'Failed to download report');
     } finally {
       setDownloading(null);
     }

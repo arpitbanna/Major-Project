@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usePageTitle } from '../utils/usePageTitle';
 import { apiRequest } from '../utils/api';
 import {
   FileText,
@@ -16,7 +18,9 @@ import {
 } from 'lucide-react';
 
 export default function CreateHandover() {
+  usePageTitle('New Shift Handover');
   const { session, profile, user } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
 
   // Form State
@@ -99,6 +103,12 @@ export default function CreateHandover() {
         token,
         body: JSON.stringify(payload),
       });
+
+      if (submitImmediately) {
+        toast.success('Handover record submitted successfully');
+      } else {
+        toast.success('Handover draft saved successfully');
+      }
 
       // Redirect to the newly created handover details page
       if (result.data?.id) {

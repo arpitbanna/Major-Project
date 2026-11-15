@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { usePageTitle } from '../utils/usePageTitle';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../config/supabase';
 
 export default function AuthCallback() {
+  usePageTitle('Authenticating');
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();

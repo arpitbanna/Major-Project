@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usePageTitle } from '../utils/usePageTitle';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import { apiRequest } from '../utils/api';
 import {
@@ -27,8 +29,10 @@ export default function HandoverDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { session, user, profile, role } = useAuth();
+  const toast = useToast();
 
   const [handover, setHandover] = useState(null);
+  usePageTitle(handover ? `Shift Handover #${handover.id?.substring(0, 8)}` : 'Shift Handover');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -97,8 +101,10 @@ export default function HandoverDetail() {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      toast.success('Shift handover PDF generated and downloaded.');
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to download PDF');
     } finally {
       setDownloadingPdf(false);
     }
@@ -125,10 +131,12 @@ export default function HandoverDetail() {
         token
       });
       setSuccessMessage('Shift handover successfully submitted for acknowledgement.');
+      toast.success('Shift handover submitted for review.');
       setConfirmConfig(null);
       fetchHandoverDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Submission failed');
       setConfirmConfig(null);
     } finally {
       setActionLoading(false);
@@ -156,10 +164,12 @@ export default function HandoverDetail() {
         token
       });
       setSuccessMessage('Shift handover successfully acknowledged and verified. Record is now locked.');
+      toast.success('Handover acknowledged. Record is permanently locked.');
       setConfirmConfig(null);
       fetchHandoverDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Acknowledgement failed');
       setConfirmConfig(null);
     } finally {
       setActionLoading(false);
@@ -178,10 +188,12 @@ export default function HandoverDetail() {
         body: JSON.stringify(editForm)
       });
       setSuccessMessage('Draft updated successfully.');
+      toast.success('Handover draft updated successfully.');
       setIsEditing(false);
       fetchHandoverDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to update draft');
     } finally {
       setActionLoading(false);
     }

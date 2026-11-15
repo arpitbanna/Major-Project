@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usePageTitle } from '../utils/usePageTitle';
 import { apiRequest } from '../utils/api';
 import {
   Users,
@@ -15,7 +17,9 @@ import {
 } from 'lucide-react';
 
 export default function AdminUsers() {
+  usePageTitle('User Management');
   const { session, user: currentUser } = useAuth();
+  const toast = useToast();
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +85,7 @@ export default function AdminUsers() {
       });
 
       setSuccess(result.message);
+      toast.success(result.message || 'User created successfully.');
       setShowCreateModal(false);
       setCreateForm({
         email: '',
@@ -93,6 +98,7 @@ export default function AdminUsers() {
       fetchUsers();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to create user');
     } finally {
       setActionLoading(false);
     }
@@ -124,11 +130,13 @@ export default function AdminUsers() {
       });
 
       setSuccess(result.message);
+      toast.success(result.message || 'User updated successfully.');
       setShowEditModal(false);
       setEditingUser(null);
       fetchUsers();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to update user');
     } finally {
       setActionLoading(false);
     }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usePageTitle } from '../utils/usePageTitle';
 import { apiRequest } from '../utils/api';
 import {
   ShieldAlert,
@@ -25,8 +27,10 @@ import RiskMatrix from '../components/smp/RiskMatrix';
 export default function HazardDetail() {
   const { id } = useParams();
   const { session, user, role } = useAuth();
+  const toast = useToast();
 
   const [hazard, setHazard] = useState(null);
+  usePageTitle(hazard ? `Hazard #${hazard.id?.substring(0, 8)}` : 'Hazard Details');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -107,10 +111,12 @@ export default function HazardDetail() {
         body: JSON.stringify(reassessForm)
       });
       setSuccessMessage(result.message);
+      toast.success('Residual risk score reassessed successfully.');
       setShowReassessModal(false);
       fetchHazardDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to update risk score');
     } finally {
       setActionLoading(false);
     }
@@ -133,6 +139,7 @@ export default function HazardDetail() {
         body: JSON.stringify(actionForm)
       });
       setSuccessMessage('Corrective action assigned.');
+      toast.success('Corrective action assigned successfully.');
       setShowAddActionModal(false);
       setActionForm({
         action_description: '',
@@ -143,6 +150,7 @@ export default function HazardDetail() {
       fetchHazardDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to assign action');
     } finally {
       setActionLoading(false);
     }
@@ -163,9 +171,11 @@ export default function HazardDetail() {
         })
       });
       setSuccessMessage(result.message);
+      toast.success(`Action marked as ${newStatus}.`);
       fetchHazardDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Failed to update action');
     } finally {
       setActionLoading(false);
     }
@@ -184,10 +194,12 @@ export default function HazardDetail() {
         body: JSON.stringify({ verification_notes: verifyNotes })
       });
       setSuccessMessage('Hazard control measures verified.');
+      toast.success('Control measures verified by Manager.');
       setShowVerifyModal(false);
       fetchHazardDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Verification failed');
     } finally {
       setActionLoading(false);
     }
@@ -215,10 +227,12 @@ export default function HazardDetail() {
         token
       });
       setSuccessMessage('Hazard closed and locked for audit.');
+      toast.success('Hazard closed and locked for audit.');
       setConfirmConfig(null);
       fetchHazardDetail();
     } catch (err) {
       setError(err.message);
+      toast.error(err.message || 'Closure failed');
       setConfirmConfig(null);
     } finally {
       setActionLoading(false);

@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { usePageTitle } from '../utils/usePageTitle';
 import { apiRequest } from '../utils/api';
 import { ArrowLeft, ShieldAlert, AlertCircle, Save, CheckCircle2 } from 'lucide-react';
 import RiskMatrix from '../components/smp/RiskMatrix';
 
 export default function CreateHazard() {
+  usePageTitle('Log Safety Hazard');
   const navigate = useNavigate();
   const { session, profile } = useAuth();
+  const toast = useToast();
 
   const [form, setForm] = useState({
     mine_section: profile?.mine_section || 'Colliery Sec-1',
@@ -102,10 +106,12 @@ export default function CreateHazard() {
         })
       });
 
+      toast.success('Safety hazard registered successfully.');
       navigate(`/smp/${result.data.id}`);
     } catch (err) {
       console.error('[CreateHazard] Error:', err.message);
       setError(err.message);
+      toast.error(err.message || 'Failed to register hazard');
     } finally {
       setSubmitting(false);
     }
