@@ -53,15 +53,26 @@ router.get('/summary', async (req, res) => {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'Open');
 
-      const { count: pendingActionsCount, error: actionsErr } = await supabase
-        .from('hazards_smp')
-        .select('*', { count: 'exact', head: true })
-        .neq('status', 'Closed');
-
       if (!hazardsErr) {
         hazardsTableReady = true;
         summary.openHazards = openHazardsCount || 0;
+      }
+
+      // Query pending mitigation tasks from public.safety_actions
+      const { count: pendingActionsCount, error: actionsErr } = await supabase
+        .from('safety_actions')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'Completed');
+
+      if (!actionsErr) {
         summary.pendingSafetyActions = pendingActionsCount || 0;
+      } else {
+        // Fallback to non-closed hazards if safety_actions table not populated yet
+        const { count: fallbackActionsCount } = await supabase
+          .from('hazards_smp')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'Closed');
+        summary.pendingSafetyActions = fallbackActionsCount || 0;
       }
     } catch (err) {
       console.warn('[Dashboard Summary] Hazards query note:', err.message);
