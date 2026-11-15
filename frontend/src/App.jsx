@@ -11,6 +11,7 @@ import HandoverDetail from './pages/HandoverDetail';
 import SmpList from './pages/SmpList';
 import CreateHazard from './pages/CreateHazard';
 import HazardDetail from './pages/HazardDetail';
+import Reports from './pages/Reports';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -73,10 +74,7 @@ export default function App() {
               path="/reports"
               element={
                 <ProtectedRoute allowedRoles={['Admin', 'Mine Manager', 'Shift In-charge']}>
-                  <div className="bg-white border border-borderLight rounded p-6 text-sm text-slateText-secondary space-y-2">
-                    <h2 className="text-base font-semibold text-slateText">Reports & Audit Center</h2>
-                    <p>Protected reporting and PDF generation center restricted to supervisory and management roles.</p>
-                  </div>
+                  <Reports />
                 </ProtectedRoute>
               }
             />

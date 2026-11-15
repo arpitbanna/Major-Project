@@ -18,7 +18,8 @@ import {
   Layers,
   Edit3,
   Save,
-  X
+  X,
+  Download
 } from 'lucide-react';
 
 export default function HandoverDetail() {
@@ -30,6 +31,7 @@ export default function HandoverDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [confirmConfig, setConfirmConfig] = useState(null);
 
@@ -74,6 +76,31 @@ export default function HandoverDetail() {
   useEffect(() => {
     fetchHandoverDetail();
   }, [id, session]);
+
+  // Handle Download Handover PDF
+  const handleDownloadPdf = async () => {
+    setDownloadingPdf(true);
+    try {
+      const token = session?.access_token;
+      const res = await fetch(`/api/reports/handover/${id}/pdf`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!res.ok) throw new Error('Failed to generate handover PDF report.');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Shift_Handover_${handover.shift_date}_${handover.id.substring(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   // Handle Submit Handover (Draft -> Submitted)
   const requestSubmitConfirmation = () => {
@@ -245,7 +272,17 @@ export default function HandoverDetail() {
         </div>
 
         {/* Status Badge & Actions */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-borderLight hover:bg-background text-slateText text-xs font-medium rounded transition-colors"
+            title="Download Statutory PDF Report"
+          >
+            <Download className={`w-3.5 h-3.5 text-primary ${downloadingPdf ? 'animate-bounce' : ''}`} />
+            <span>{downloadingPdf ? 'Exporting...' : 'Download PDF'}</span>
+          </button>
+
           {handover.status === 'Acknowledged' && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-emerald-50 text-status-success border border-emerald-200">
               <Lock className="w-3.5 h-3.5" />
