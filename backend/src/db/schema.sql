@@ -20,12 +20,14 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view their own profile
+DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
 CREATE POLICY "Users can view own profile"
   ON public.user_profiles
   FOR SELECT
   USING (auth.uid() = id);
 
 -- Policy: Users can update their own non-role fields
+DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
 CREATE POLICY "Users can update own profile"
   ON public.user_profiles
   FOR UPDATE
@@ -33,6 +35,7 @@ CREATE POLICY "Users can update own profile"
   WITH CHECK (auth.uid() = id);
 
 -- Policy: Service role or Admins can view all profiles
+DROP POLICY IF EXISTS "Admins can view all profiles" ON public.user_profiles;
 CREATE POLICY "Admins can view all profiles"
   ON public.user_profiles
   FOR SELECT
