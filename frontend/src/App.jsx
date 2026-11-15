@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import HandoverList from './pages/HandoverList';
 import CreateHandover from './pages/CreateHandover';
 import HandoverDetail from './pages/HandoverDetail';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -74,6 +75,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
       </BrowserRouter>
