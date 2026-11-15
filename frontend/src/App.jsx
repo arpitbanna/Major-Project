@@ -8,6 +8,9 @@ import Login from './pages/Login';
 import HandoverList from './pages/HandoverList';
 import CreateHandover from './pages/CreateHandover';
 import HandoverDetail from './pages/HandoverDetail';
+import SmpList from './pages/SmpList';
+import CreateHazard from './pages/CreateHazard';
+import HazardDetail from './pages/HazardDetail';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -46,10 +49,23 @@ export default function App() {
               path="/smp"
               element={
                 <ProtectedRoute>
-                  <div className="bg-white border border-borderLight rounded p-6 text-sm text-slateText-secondary space-y-2">
-                    <h2 className="text-base font-semibold text-slateText">Safety Management Plan Module</h2>
-                    <p>Protected area for hazard identification and risk control tracking. Scheduled for Phase 6.</p>
-                  </div>
+                  <SmpList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/smp/new"
+              element={
+                <ProtectedRoute allowedRoles={['Admin', 'Mine Manager', 'Shift In-charge', 'Supervisor']}>
+                  <CreateHazard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/smp/:id"
+              element={
+                <ProtectedRoute>
+                  <HazardDetail />
                 </ProtectedRoute>
               }
             />
