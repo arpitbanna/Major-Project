@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { supabase, isConfigured } = require('../config/supabase');
+const { requireAuth } = require('../middleware/auth');
+
+// Protect all dashboard endpoints with authentication
+router.use(requireAuth);
 
 /**
  * GET /api/dashboard/summary

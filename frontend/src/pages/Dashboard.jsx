@@ -6,7 +6,7 @@ import QuickActions from '../components/dashboard/QuickActions';
 import RecentActivity from '../components/dashboard/RecentActivity';
 
 export default function Dashboard() {
-  const { user, profile, role } = useAuth();
+  const { user, profile, role, session } = useAuth();
 
   const [summaryData, setSummaryData] = useState({
     todayHandovers: 0,
@@ -37,8 +37,15 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       // Fetch summary
-      const summaryRes = await fetch('/api/dashboard/summary');
+      const summaryRes = await fetch('/api/dashboard/summary', { headers });
       if (summaryRes.ok) {
         const result = await summaryRes.json();
         if (result.data) {
@@ -48,7 +55,7 @@ export default function Dashboard() {
       }
 
       // Fetch recent activity
-      const recentRes = await fetch('/api/dashboard/recent');
+      const recentRes = await fetch('/api/dashboard/recent', { headers });
       if (recentRes.ok) {
         const result = await recentRes.json();
         if (result.data) {
@@ -63,8 +70,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (session?.access_token) {
+      fetchDashboardData();
+    }
+  }, [session?.access_token]);
 
   const currentShift = getCurrentShift();
   const todayFormatted = new Date().toLocaleDateString('en-IN', {
