@@ -10,7 +10,10 @@
  *
  * @param  {...string} allowedRoles
  */
-function requireRole(...allowedRoles) {
+function requireRole(...roles) {
+  // Support both requireRole('Admin', 'Mine Manager') and requireRole(['Admin', 'Mine Manager'])
+  const allowedRoles = roles.flat();
+
   return (req, res, next) => {
     if (!req.profile || !req.profile.role) {
       return res.status(403).json({
