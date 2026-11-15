@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
+import { apiRequest } from '../utils/api';
 
 const AuthContext = createContext(null);
 
@@ -13,17 +14,7 @@ export function AuthProvider({ children }) {
   // Fetch verified profile from backend using the access token
   const fetchBackendProfile = async (token) => {
     try {
-      const response = await fetch('/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch verified user profile from server');
-      }
-
-      const data = await response.json();
+      const data = await apiRequest('/api/auth/me', { token });
       setProfile(data.profile);
       return data.profile;
     } catch (err) {

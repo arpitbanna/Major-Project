@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../utils/api';
 import {
   Users,
   UserPlus,
@@ -53,16 +54,7 @@ export default function AdminUsers() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch('/api/admin/users', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to fetch personnel list.');
-      }
-
-      const result = await res.json();
+      const result = await apiRequest('/api/admin/users', { token });
       setUsers(result.data || []);
     } catch (err) {
       console.warn('[AdminUsers] Fetch error:', err.message);
@@ -74,7 +66,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
-  }, [session]);
+  }, [session?.access_token]);
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
@@ -82,17 +74,11 @@ export default function AdminUsers() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch('/api/admin/users', {
+      const result = await apiRequest('/api/admin/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify(createForm)
       });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to create user account.');
 
       setSuccess(result.message);
       setShowCreateModal(false);
@@ -131,17 +117,11 @@ export default function AdminUsers() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+      const result = await apiRequest(`/api/admin/users/${editingUser.id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify(editForm)
       });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to update user profile.');
 
       setSuccess(result.message);
       setShowEditModal(false);

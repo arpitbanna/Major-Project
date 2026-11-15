@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../utils/api';
 import {
   FileText,
   Save,
@@ -44,17 +45,12 @@ export default function CreateHandover() {
       setLoadingStaff(true);
       try {
         const token = session?.access_token;
-        const res = await fetch('/api/handover/staff', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-        if (res.ok) {
-          const json = await res.json();
-          // Filter out current user from being incoming in-charge
-          const eligibleStaff = (json.data || []).filter(
-            (s) => s.id !== user?.id
-          );
-          setStaffList(eligibleStaff);
-        }
+        const json = await apiRequest('/api/handover/staff', { token });
+        // Filter out current user from being incoming in-charge
+        const eligibleStaff = (json.data || []).filter(
+          (s) => s.id !== user?.id
+        );
+        setStaffList(eligibleStaff);
       } catch (err) {
         console.warn('[CreateHandover] Staff list note:', err.message);
       } finally {
@@ -63,7 +59,7 @@ export default function CreateHandover() {
     };
 
     fetchStaff();
-  }, [session, user]);
+  }, [session?.access_token, user?.id]);
 
   const handleSubmit = async (submitImmediately = false) => {
     setErrorMessage('');
@@ -98,20 +94,11 @@ export default function CreateHandover() {
         submitImmediately,
       };
 
-      const response = await fetch('/api/handover', {
+      const result = await apiRequest('/api/handover', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
+        token,
         body: JSON.stringify(payload),
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to save shift handover');
-      }
 
       // Redirect to the newly created handover details page
       if (result.data?.id) {

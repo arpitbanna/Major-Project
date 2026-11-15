@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import { apiRequest } from '../utils/api';
 import {
   FileText,
   Clock,
@@ -44,16 +45,7 @@ export default function HandoverDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/handover/${id}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to load handover details');
-      }
-
-      const result = await res.json();
+      const result = await apiRequest(`/api/handover/${id}`, { token });
       setHandover(result.data);
       setEditForm({
         mine_section: result.data.mine_section || '',
@@ -75,7 +67,7 @@ export default function HandoverDetail() {
 
   useEffect(() => {
     fetchHandoverDetail();
-  }, [id, session]);
+  }, [id, session?.access_token]);
 
   // Handle Download Handover PDF
   const handleDownloadPdf = async () => {
@@ -85,7 +77,17 @@ export default function HandoverDetail() {
       const res = await fetch(`/api/reports/handover/${id}/pdf`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
-      if (!res.ok) throw new Error('Failed to generate handover PDF report.');
+      if (!res.ok) {
+        let errMsg = 'Failed to generate handover PDF report.';
+        try {
+          const text = await res.text();
+          if (text) {
+            const parsed = JSON.parse(text);
+            errMsg = parsed.message || errMsg;
+          }
+        } catch (_) {}
+        throw new Error(errMsg);
+      }
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -118,14 +120,10 @@ export default function HandoverDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/handover/${id}/submit`, {
+      await apiRequest(`/api/handover/${id}/submit`, {
         method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        token
       });
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.message || 'Failed to submit handover');
-      }
       setSuccessMessage('Shift handover successfully submitted for acknowledgement.');
       setConfirmConfig(null);
       fetchHandoverDetail();
@@ -153,14 +151,10 @@ export default function HandoverDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/handover/${id}/acknowledge`, {
+      await apiRequest(`/api/handover/${id}/acknowledge`, {
         method: 'POST',
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        token
       });
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.message || 'Failed to acknowledge handover');
-      }
       setSuccessMessage('Shift handover successfully acknowledged and verified. Record is now locked.');
       setConfirmConfig(null);
       fetchHandoverDetail();
@@ -178,18 +172,11 @@ export default function HandoverDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/handover/${id}`, {
+      await apiRequest(`/api/handover/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify(editForm)
       });
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.message || 'Failed to update draft');
-      }
       setSuccessMessage('Draft updated successfully.');
       setIsEditing(false);
       fetchHandoverDetail();

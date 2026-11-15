@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../utils/api';
 import {
   ShieldAlert,
   ArrowLeft,
@@ -63,16 +64,7 @@ export default function HazardDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/smp/hazards/${id}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || 'Failed to load hazard record.');
-      }
-
-      const result = await res.json();
+      const result = await apiRequest(`/api/smp/hazards/${id}`, { token });
       setHazard(result.data);
       setReassessForm({
         likelihood: result.data.likelihood || 1,
@@ -90,13 +82,8 @@ export default function HazardDetail() {
   const fetchStaff = async () => {
     try {
       const token = session?.access_token;
-      const res = await fetch('/api/handover/staff', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-      if (res.ok) {
-        const result = await res.json();
-        setStaffList(result.data || []);
-      }
+      const result = await apiRequest('/api/handover/staff', { token });
+      setStaffList(result.data || []);
     } catch (err) {
       console.warn('[HazardDetail] Staff lookup note:', err.message);
     }
@@ -105,7 +92,7 @@ export default function HazardDetail() {
   useEffect(() => {
     fetchHazardDetail();
     fetchStaff();
-  }, [id, session]);
+  }, [id, session?.access_token]);
 
   // Re-assess Risk Submission
   const handleReassessSubmit = async (e) => {
@@ -114,16 +101,11 @@ export default function HazardDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/smp/hazards/${id}/assess`, {
+      const result = await apiRequest(`/api/smp/hazards/${id}/assess`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify(reassessForm)
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to re-assess risk.');
       setSuccessMessage(result.message);
       setShowReassessModal(false);
       fetchHazardDetail();
@@ -145,16 +127,11 @@ export default function HazardDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/smp/hazards/${id}/actions`, {
+      await apiRequest(`/api/smp/hazards/${id}/actions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify(actionForm)
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to assign action.');
       setSuccessMessage('Corrective action assigned.');
       setShowAddActionModal(false);
       setActionForm({
@@ -177,19 +154,14 @@ export default function HazardDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/smp/actions/${actionId}`, {
+      const result = await apiRequest(`/api/smp/actions/${actionId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify({
           status: newStatus,
           completion_remarks: `Marked as ${newStatus} by user`
         })
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to update action status.');
       setSuccessMessage(result.message);
       fetchHazardDetail();
     } catch (err) {
@@ -206,16 +178,11 @@ export default function HazardDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/smp/hazards/${id}/verify`, {
+      const result = await apiRequest(`/api/smp/hazards/${id}/verify`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify({ verification_notes: verifyNotes })
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to verify hazard.');
       setSuccessMessage('Hazard control measures verified.');
       setShowVerifyModal(false);
       fetchHazardDetail();
@@ -243,12 +210,10 @@ export default function HazardDetail() {
     setError(null);
     try {
       const token = session?.access_token;
-      const res = await fetch(`/api/smp/hazards/${id}/close`, {
+      const result = await apiRequest(`/api/smp/hazards/${id}/close`, {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        token
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Failed to close hazard.');
       setSuccessMessage('Hazard closed and locked for audit.');
       setConfirmConfig(null);
       fetchHazardDetail();

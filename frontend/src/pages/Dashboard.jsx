@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../utils/api';
 import { Clock, MapPin, Calendar } from 'lucide-react';
 import SummaryCards from '../components/dashboard/SummaryCards';
 import QuickActions from '../components/dashboard/QuickActions';
@@ -37,30 +38,25 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
+      const token = session?.access_token;
 
       // Fetch summary
-      const summaryRes = await fetch('/api/dashboard/summary', { headers });
-      if (summaryRes.ok) {
-        const result = await summaryRes.json();
-        if (result.data) {
-          setSummaryData(result.data);
-          setTablesInitialized(result.tablesInitialized);
-        }
+      const summaryResult = await apiRequest('/api/dashboard/summary', { token }).catch((err) => {
+        console.warn('[Dashboard] Summary fetch note:', err.message);
+        return null;
+      });
+      if (summaryResult?.data) {
+        setSummaryData(summaryResult.data);
+        setTablesInitialized(summaryResult.tablesInitialized);
       }
 
       // Fetch recent activity
-      const recentRes = await fetch('/api/dashboard/recent', { headers });
-      if (recentRes.ok) {
-        const result = await recentRes.json();
-        if (result.data) {
-          setRecentData(result.data);
-        }
+      const recentResult = await apiRequest('/api/dashboard/recent', { token }).catch((err) => {
+        console.warn('[Dashboard] Recent activity fetch note:', err.message);
+        return null;
+      });
+      if (recentResult?.data) {
+        setRecentData(recentResult.data);
       }
     } catch (err) {
       console.warn('[Dashboard] Could not fetch data:', err.message);

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../utils/api';
 import {
   ShieldAlert,
   Plus,
@@ -41,15 +42,7 @@ export default function SmpList() {
       if (filterCategory !== 'All') params.append('category', filterCategory);
 
       const url = `/api/smp/hazards${params.toString() ? `?${params.toString()}` : ''}`;
-      const res = await fetch(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to fetch workplace hazards.');
-      }
-
-      const result = await res.json();
+      const result = await apiRequest(url, { token });
       setHazards(result.data || []);
     } catch (err) {
       console.warn('[SmpList] Fetch error:', err.message);
@@ -61,7 +54,7 @@ export default function SmpList() {
 
   useEffect(() => {
     fetchHazards();
-  }, [filterStatus, filterRisk, filterCategory, session]);
+  }, [filterStatus, filterRisk, filterCategory, session?.access_token]);
 
   // Risk badge styling helper
   const getRiskBadge = (level, score) => {

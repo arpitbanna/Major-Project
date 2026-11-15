@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../utils/api';
 import { ArrowLeft, ShieldAlert, AlertCircle, Save, CheckCircle2 } from 'lucide-react';
 import RiskMatrix from '../components/smp/RiskMatrix';
 
@@ -86,12 +87,9 @@ export default function CreateHazard() {
     setSubmitting(true);
     try {
       const token = session?.access_token;
-      const res = await fetch('/api/smp/hazards', {
+      const result = await apiRequest('/api/smp/hazards', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
+        token,
         body: JSON.stringify({
           mine_section: form.mine_section,
           hazard_category: form.hazard_category,
@@ -103,11 +101,6 @@ export default function CreateHazard() {
           initial_assessment_notes: form.initial_assessment_notes
         })
       });
-
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.message || 'Failed to submit hazard record.');
-      }
 
       navigate(`/smp/${result.data.id}`);
     } catch (err) {

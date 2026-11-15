@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiRequest } from '../utils/api';
 import {
   FileText,
   PlusCircle,
@@ -42,16 +43,7 @@ export default function HandoverList() {
         url += `?${params.toString()}`;
       }
 
-      const response = await fetch(url, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to load shift handovers');
-      }
-
-      const result = await response.json();
+      const result = await apiRequest(url, { token });
       setHandovers(result.data || []);
     } catch (err) {
       console.warn('[HandoverList] Fetch error:', err.message);
@@ -63,7 +55,7 @@ export default function HandoverList() {
 
   useEffect(() => {
     fetchHandovers();
-  }, [statusFilter, dateFilter]);
+  }, [statusFilter, dateFilter, session?.access_token]);
 
   const getStatusBadge = (status) => {
     switch (status) {

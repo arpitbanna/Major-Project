@@ -28,8 +28,15 @@ export default function Reports() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to generate PDF report from server.');
+        let errorMsg = 'Failed to generate PDF report from server.';
+        try {
+          const text = await res.text();
+          if (text) {
+            const parsed = JSON.parse(text);
+            errorMsg = parsed.message || errorMsg;
+          }
+        } catch (_) {}
+        throw new Error(errorMsg);
       }
 
       const blob = await res.blob();
