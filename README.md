@@ -1,221 +1,211 @@
-# Coal Mine Productivity & Safety Management System
+# CoalSafe — Coal Mine Productivity & Safety Management System
 
 **Semester 3 Major Project**  
-Based on Ministry of Coal / CMPDI Problem Statement (2024).
+*Problem Statement: Web and App-based Software for Productivity and Safety Management of Coal Mines (Ministry of Coal / CMPDI, 2024).*
 
 ---
 
 ## 1. Project Overview
 
-The **Coal Mine Productivity & Safety Management System** is a web-based, mobile-responsive application designed to modernize shift communications and safety compliance in coal mining operations.
+**CoalSafe** is an enterprise-grade digital logging and statutory safety management system engineered for underground and opencast coal mines. It directly replaces vulnerable paper logbooks with an immutable, cryptographically verifiable digital platform conforming to the **Coal Mines Regulations (CMR)** and **Directorate General of Mines Safety (DGMS)** guidelines.
 
-The system addresses two core challenges:
-1. **Digital Shift Handover Log System:** Digital logging of shift activities, equipment availability, production metrics, safety observations, and pending tasks with mandatory incoming shift verification and record locking.
-2. **Safety Management Plan (SMP) System:** Hazard identification, 5×5 risk assessment scoring, mitigation assignment, target date tracking, and management verification.
+### Primary Modules
+1. **Digital Shift Handover Logbook**: Operational logging of coal production tonnage, machinery status, atmospheric gas readings, and pending tasks with mandatory incoming cross-shift 4-eyes verification and permanent database record locking.
+2. **Safety Management Plan (SMP) & Hazard Register**: Workplace hazard identification, mathematical 5×5 risk assessment scoring ($Likelihood \times Severity$), corrective action assignment under the Hierarchy of Controls, target date tracking, and Mine Manager closeout verification.
+3. **Statutory PDF Reports**: Instant generation of official PDF logbooks and registers compliant with DGMS audit standards using `pdfmake`.
+4. **Enterprise ERP Integration**: Secured, read-only JSON data feeds (`/api/erp/handovers`, `/api/erp/hazards`) protected by dedicated API keys for enterprise systems (SAP / Coal India ERP).
 
 ---
 
 ## 2. Technology Stack
 
-- **Frontend:** React, Vite, JavaScript, Tailwind CSS, Lucide React icons, React Router
-- **Backend:** Node.js, Express.js
-- **Database & Auth:** Supabase (PostgreSQL + Supabase Auth)
-- **Architecture:** Client-Server REST API architecture with role authorization middleware
-
----
-
-## 3. User Roles & Permissions
-
-The application supports four operational roles:
-
-| Role | Responsibilities | Key Permissions |
+| Layer | Technologies | Role |
 | :--- | :--- | :--- |
-| **Admin** | System management & setup | Full access, user role assignments, section master data |
-| **Mine Manager** | Statutory oversight & audit | View all logs, close hazards, verify mitigation actions, audit reports |
-| **Shift In-charge** | Shift-level operational management | Create and submit shift handovers, acknowledge incoming handovers, assign tasks |
-| **Supervisor** | Field inspection & equipment monitoring | Log machine downtime, report on-site hazards, create draft handovers |
+| **Frontend** | React 18.3, Vite 5.4, Tailwind CSS 3.4, React Router v6, Lucide Icons | Responsive PWA interface, 5×5 interactive matrix, instant PDF exports |
+| **Backend** | Node.js (v20 LTS), Express.js (CommonJS) | Business logic, authentication, RBAC authorization, statutory locking |
+| **Database & Auth** | Supabase (PostgreSQL 15 + Supabase Auth) | Row Level Security (RLS), ACID triggers, immutable statutory logs |
+| **Document Engine** | `pdfmake` | Server-side statutory PDF generation with standard Helvetica typography |
+| **Security** | `helmet`, `express-rate-limit`, JWT Bearer tokens | Defense-in-depth header protection and API throttling |
+| **Testing** | Node.js native test runner (`node:test`), Supertest, Vitest | 26 unit and end-to-end integration tests |
 
 ---
 
-## 4. Digital Shift Handover Workflow (Phase 5)
+## 3. Demo Viva Credentials (DEMO ONLY)
 
-The handover module implements a statutory and operational 3-stage lifecycle:
+The system includes pre-provisioned demo accounts in Supabase Auth representing all 4 statutory roles. A **Quick Demo Fill** component is integrated on the login screen for one-click authentication during examinations.
 
+> [!IMPORTANT]
+> These credentials are strictly for local testing and viva demonstration. Never deploy default demo credentials to production.
+
+| Role | Email | Password | Full Name & Designation | Section / District |
+| :--- | :--- | :--- | :--- | :--- |
+| **Admin** | `admin@colliery.in` | `CoalSafe@2026` | Chief Administrator (System Admin) | Central Operations |
+| **Mine Manager** | `manager@colliery.in` | `CoalSafe@2026` | Er. Rajesh Sharma (First Class Manager) | Colliery Sec-1 |
+| **Shift In-charge** | `incharge@colliery.in` | `CoalSafe@2026` | Amit Kumar Verma (Overman In-charge) | Panel A - Longwall |
+| **Supervisor** | `supervisor@colliery.in`| `CoalSafe@2026` | Suresh Singh (Mining Sirdar) | Panel A - Longwall |
+
+---
+
+## 4. Role-Based Access Control (RBAC) Matrix
+
+| Feature / Action | Admin | Mine Manager | Shift In-charge | Supervisor |
+| :--- | :---: | :---: | :---: | :---: |
+| **Operations Dashboard** | Full | Full | Full | Full |
+| **Create Handover (Draft)** | Yes | Yes | Yes | Yes |
+| **Submit Outgoing Handover** | Yes | Yes | Yes | Yes |
+| **Acknowledge Handover (4-Eyes)** | Yes | Yes | Yes (Non-creator only) | No |
+| **Report Workplace Hazard** | Yes | Yes | Yes | Yes |
+| **Re-assess Risk (5×5 Matrix)** | Yes | Yes | Yes | Yes |
+| **Assign Corrective Safety Action** | Yes | Yes | Yes | No |
+| **Manager Verification & Hazard Closure** | Yes | Yes | No | No |
+| **Download Statutory PDF Reports** | Yes | Yes | Yes | No |
+| **User & Personnel Administration** | Yes | No | No | No |
+
+---
+
+## 5. Core Architectural Workflows
+
+### Shift Handover Statutory Lifecycle
 ```text
-[Outgoing In-charge]
+[Outgoing Shift In-charge]
        │
        ▼
 1. Create Handover (Draft)
-   ├── Mine Section & Shift Date/Type
-   ├── Production & Tonnage Progress
-   ├── Equipment & Machinery Status
-   ├── Safety & Strata Atmospheric Observations
-   ├── Pending Tasks for Relieving Shift
-   └── Special Remarks
+   ├── Production Tonnage & Mining Progress
+   ├── Equipment Status & Machine Availability
+   ├── Strata & Atmospheric Gas Observations (CH4, CO, Airflow)
+   └── Pending Work for Incoming Shift
        │
        ▼
 2. Submit Handover (Submitted)
-   ├── Outgoing in-charge commits the record
-   ├── Timestamp recorded (submitted_at)
-   └── Log enters "Pending Acknowledgement" state
+   ├── Record locked against creator edits
+   └── Shift enters "Pending Acknowledgement" queue
        │
        ▼
-[Incoming In-charge / Manager]
+[Incoming In-charge / Mine Manager]
        │
        ▼
-3. Digital Acknowledgement & Sign-off (Acknowledged)
-   ├── Incoming in-charge inspects conditions on-site
-   ├── 4-Eyes Cross-Shift Rule: Outgoing creator cannot acknowledge own log
-   ├── Timestamp recorded (acknowledged_at)
-   └── Permanent Record Locking: Immutability enforced by backend and database trigger
+3. Digital Acknowledgement & Verification (Acknowledged)
+   ├── 4-Eyes Check: Outgoing creator strictly prohibited from self-acknowledgement
+   ├── Relieving in-charge accepts physical underground shift conditions
+   └── Immutability Lock: Database trigger permanently locks record against modification
 ```
 
-### Handover REST API Endpoints
+### DGMS 5×5 Risk Assessment Matrix
+The Safety Management Plan computes risk using the formula:
+$$\text{Risk Score} = \text{Likelihood } (1-5) \times \text{Severity } (1-5)$$
 
-| Method | Endpoint | Access | Purpose |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/handover` | Authenticated | List handovers with optional status, date, and section filters |
-| `GET` | `/api/handover/staff` | Authenticated | Retrieve active staff for assigning incoming shift in-charge |
-| `GET` | `/api/handover/:id` | Authenticated | View complete details of an individual handover log |
-| `POST` | `/api/handover` | Staff Roles | Create a new handover (Draft or Submitted directly) |
-| `PUT` | `/api/handover/:id` | Creator / Admin | Edit own draft handover (blocked if Submitted/Acknowledged) |
-| `POST` | `/api/handover/:id/submit` | Creator / Admin | Transition handover from Draft to Submitted |
-| `POST` | `/api/handover/:id/acknowledge` | Incoming / Manager | Digital sign-off, locks record permanently |
+- **Low Risk (1–4)**: Routine supervision and continuous monitoring.
+- **Medium Risk (5–9)**: Planned corrective actions with assigned target dates.
+- **High Risk (10–16)**: Urgent remediation and direct management oversight.
+- **Extreme Risk (17–25)**: Immediate operational stoppage in affected zone until mitigated.
 
 ---
 
-## 5. Project Directory Structure
-
-```text
-Major Project/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── supabase.js           # Supabase client configuration
-│   │   ├── db/
-│   │   │   ├── schema.sql            # Master cumulative database schema
-│   │   │   └── shift_handovers.sql   # Shift handover tables, RLS & triggers
-│   │   ├── middleware/
-│   │   │   ├── auth.js               # JWT verification (requireAuth)
-│   │   │   └── roles.js              # Role authorization guard (requireRole)
-│   │   ├── routes/
-│   │   │   ├── auth.js               # Auth & profile verification endpoints
-│   │   │   ├── dashboard.js          # Live dashboard metrics & recent activity
-│   │   │   ├── handover.js           # Shift handover operational endpoints
-│   │   │   └── health.js             # API health check route
-│   │   └── app.js                    # Express app setup and middleware
-│   ├── .env.example                  # Backend environment template
-│   ├── .env                          # Local environment configuration
-│   ├── package.json                  # Backend dependencies
-│   └── server.js                     # Server entry point
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── common/
-│   │   │   │   └── ProtectedRoute.jsx# Role-guarded route wrapper
-│   │   │   ├── dashboard/
-│   │   │   │   ├── QuickActions.jsx  # Operational navigation shortcuts
-│   │   │   │   ├── RecentActivity.jsx# Live shift logs & hazard feed
-│   │   │   │   └── SummaryCards.jsx  # Operational counts & indicators
-│   │   │   └── layout/
-│   │   │       ├── AppLayout.jsx     # Application layout wrapper
-│   │   │       ├── Header.jsx        # Top navigation with user badge & logout
-│   │   │       └── Sidebar.jsx       # Role-based sidebar navigation
-│   │   ├── config/
-│   │   │   └── supabase.js           # Client-side Supabase authentication
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx       # Session state, login, logout, profile
-│   │   ├── pages/
-│   │   │   ├── CreateHandover.jsx    # Outgoing shift handover form
-│   │   │   ├── Dashboard.jsx         # Operations & safety dashboard
-│   │   │   ├── HandoverDetail.jsx    # Handover review & acknowledgement
-│   │   │   ├── HandoverList.jsx      # Filterable shift handover logbook
-│   │   │   └── Login.jsx             # Minimalist industrial login form
-│   │   ├── App.jsx                   # Application routing and shell
-│   │   ├── index.css                 # Tailwind CSS styles
-│   │   └── main.jsx                  # React DOM mounting
-│   ├── .env.example                  # Frontend environment template
-│   ├── .env                          # Local environment configuration
-│   ├── index.html                    # HTML entry
-│   ├── package.json                  # Frontend dependencies
-│   ├── postcss.config.js             # PostCSS configuration
-│   ├── tailwind.config.js            # Tailwind industrial light theme
-│   └── vite.config.js                # Vite configuration with /api proxy
-├── .gitignore                        # Git ignore file
-├── package.json                      # Root runner script package
-└── README.md                         # Project documentation
-```
-
----
-
-## 6. Setup & Running Instructions
+## 6. Local Setup & Running Instructions
 
 ### Prerequisites
-- Node.js (v18.0 or later recommended)
-- npm (v9.0 or later)
+- Node.js v18+ (Node v20 LTS recommended)
+- npm v9+
+- Active Supabase project (Free tier)
 
-### Step 1: Environment Variables Setup
-Copy example files into `.env` for both backend and frontend:
-
+### Step 1: Clone and Configure Environment Files
 ```bash
-# Backend
+git clone https://github.com/arpitbanna/Major-Project.git
+cd Major-Project
+
+# Configure Backend
 cp backend/.env.example backend/.env
 
-# Frontend
+# Configure Frontend
 cp frontend/.env.example frontend/.env
 ```
 
-Configure your Supabase credentials in both `.env` files:
-- `SUPABASE_URL`: Your Supabase project URL (`https://xyzcompany.supabase.co`)
-- `SUPABASE_ANON_KEY`: Supabase Anonymous public API key
-- `SUPABASE_SERVICE_ROLE_KEY`: Supabase Service Role key (backend only)
+Ensure `backend/.env` and `frontend/.env` contain your Supabase credentials:
+```ini
+# Backend (.env)
+PORT=5000
+NODE_ENV=development
+CLIENT_URL=http://localhost:5173
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+SUPABASE_ANON_KEY=your-supabase-anon-key
+ERP_API_KEY=coalsafe-erp-secret-2024
 
-### Step 2: Database Schema Setup
-Execute the SQL commands in `backend/src/db/schema.sql` in the Supabase SQL Editor:
-- Creates `public.user_profiles` table linked to Supabase Auth.
-- Creates `public.shift_handovers` table with constraints and indexes.
-- Enables Row Level Security (RLS) policies for records and roles.
-- Adds `prevent_acknowledged_handover_update` trigger to enforce record immutability.
-
-### Step 3: Install Dependencies
-```bash
-# Backend dependencies
-cd backend
-npm install
-
-# Frontend dependencies
-cd ../frontend
-npm install
+# Frontend (.env)
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+VITE_API_URL=/api
 ```
 
-### Step 4: Run the Development Servers
+### Step 2: Database Schema & Seed Data Setup
+1. Open your **Supabase Dashboard** -> **SQL Editor**.
+2. Run `backend/src/db/schema.sql` to create all tables, indexes, RLS policies, and immutability triggers.
+3. Run `backend/src/db/seed.sql` (or run `npm run seed` in `backend`) to provision the 4 demo accounts and realistic mining data.
 
-Open two terminal tabs:
-
-**Tab 1: Backend Server**
+### Step 3: Install Dependencies & Run
 ```bash
-cd backend
-npm run dev
-# Starts backend server at http://localhost:5000
-# Health check available at: http://localhost:5000/api/health
-# Handover API available at: http://localhost:5000/api/handover
-```
+# Install dependencies in both folders
+cd backend && npm install
+cd ../frontend && npm install
+cd ..
 
-**Tab 2: Frontend Server**
-```bash
-cd frontend
+# Run both services simultaneously:
 npm run dev
-# Starts Vite frontend server at http://localhost:5173
+
+# Or run in separate terminal windows:
+# Terminal 1: npm run dev:backend  (Backend API on http://localhost:5000)
+# Terminal 2: npm run dev:frontend (React UI on http://localhost:5173)
 ```
 
 ---
 
-## 7. Development Phases
+## 7. Automated Testing Suite
 
-- [x] **Phase 1:** Requirement Analysis & System Specification
-- [x] **Phase 2:** Project Setup, Shell Layout & Health Endpoint
-- [x] **Phase 3:** Authentication & Role-Based Access Control (Admin, Mine Manager, Shift In-charge, Supervisor)
-- [x] **Phase 4:** Dashboard & Shift Overview Metrics
-- [x] **Phase 5:** Digital Shift Handover Module (Form, Records, Acknowledgment) *(Current)*
-- [ ] **Phase 6:** Safety Management Plan (SMP) & Hazard Register
-- [ ] **Phase 7:** Audit Trail, PDF Reports & Project Viva Documentation
+The repository contains 26 comprehensive automated tests verifying all business rules, role guards, and calculation matrices:
+
+```bash
+# Run all tests across backend and frontend:
+npm test
+```
+
+- **Backend (`node:test`) — 22 Tests**:
+  - API authentication guards and 401 rejection on unprotected requests.
+  - End-to-end live Supabase authentication for all 4 roles.
+  - Role-based authorization tests (Admin access vs Supervisor 403 denial).
+  - Shift Handover 4-eyes cross-shift acknowledgement and tamper lock enforcement.
+  - Safety Management Plan hazard lifecycle and manager verification.
+  - 5×5 risk matrix calculation boundary testing.
+  - Read-only ERP API key authentication.
+- **Frontend (`vitest`) — 4 Tests**:
+  - Client-side 5×5 risk score and color badge calculation mappings.
+
+---
+
+## 8. Production Deployment Guide
+
+### Recommended Production Architecture
+- **Frontend**: [Vercel](https://vercel.com) (Serverless CDN + SPA Rewrites)
+- **Backend**: [Render](https://render.com) or [Railway](https://railway.app) (Docker / Node.js Web Service)
+- **Database & Auth**: [Supabase](https://supabase.com) (Managed PostgreSQL)
+
+### Frontend Deployment (Vercel)
+1. Import repository into Vercel and select root directory as `frontend`.
+2. Framework Preset: **Vite**.
+3. Build Command: `npm run build`.
+4. Output Directory: `dist`.
+5. Add Environment Variables:
+   - `VITE_SUPABASE_URL`: Your production Supabase URL.
+   - `VITE_SUPABASE_ANON_KEY`: Your production Supabase Anon Key.
+6. [frontend/vercel.json](file:///Users/arpit/Desktop/Major%20Project/frontend/vercel.json) handles SPA client routing and rewrites `/api/*` to your production backend.
+
+### Backend Deployment (Render / Railway)
+1. Create a new **Web Service** pointing to the repository, root directory `backend`.
+2. Build Command: `npm install`.
+3. Start Command: `npm start` (runs `node server.js`).
+4. Set Environment Variables:
+   - `NODE_ENV`: `production`
+   - `CLIENT_URL`: `https://your-frontend.vercel.app`
+   - `SUPABASE_URL`: Your production Supabase URL.
+   - `SUPABASE_SERVICE_ROLE_KEY`: Your production Supabase Service Role Key.
+   - `ERP_API_KEY`: A strong shared secret for external ERP data access.
