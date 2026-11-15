@@ -42,7 +42,7 @@ This guide walks you through setting up CoalSafe (Coal Mine Productivity & Safet
 In the `backend` folder, create a `.env` file based on `.env.example`:
 
 ```bash
-PORT=5000
+PORT=5001 # Uses 5001 to prevent conflict with macOS AirPlay Receiver on port 5000
 NODE_ENV=development
 SUPABASE_URL=https://<your-project-ref>.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-secret-key>
@@ -97,7 +97,7 @@ Repeat the same to create two Shift In-charges for testing shift handovers:
 cd backend
 npm install
 npm run dev
-# Server runs at http://localhost:5000
+# Server runs at http://localhost:5001
 ```
 
 ### Start Frontend Server:

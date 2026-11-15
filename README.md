@@ -123,8 +123,8 @@ cp frontend/.env.example frontend/.env
 
 Ensure `backend/.env` and `frontend/.env` contain your Supabase credentials:
 ```ini
-# Backend (.env)
-PORT=5000
+# Backend (.env) - Port 5001 avoids macOS AirPlay Receiver port 5000 collision
+PORT=5001
 NODE_ENV=development
 CLIENT_URL=http://localhost:5173
 SUPABASE_URL=https://your-project-id.supabase.co
@@ -154,7 +154,7 @@ cd ..
 npm run dev
 
 # Or run in separate terminal windows:
-# Terminal 1: npm run dev:backend  (Backend API on http://localhost:5000)
+# Terminal 1: npm run dev:backend  (Backend API on http://localhost:5001)
 # Terminal 2: npm run dev:frontend (React UI on http://localhost:5173)
 ```
 
