@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
 require('dotenv').config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -8,7 +9,11 @@ let supabase = null;
 let isConfigured = false;
 
 if (supabaseUrl && supabaseKey && !supabaseUrl.includes('your-project-id')) {
-  supabase = createClient(supabaseUrl, supabaseKey);
+  supabase = createClient(supabaseUrl, supabaseKey, {
+    realtime: {
+      transport: WebSocket
+    }
+  });
   isConfigured = true;
 } else {
   console.warn('[Supabase] Warning: Supabase credentials not set or using placeholder values in .env');
