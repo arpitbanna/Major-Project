@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ConfirmDialog from '../components/common/ConfirmDialog';
 import {
   FileText,
   Clock,
@@ -30,6 +31,7 @@ export default function HandoverDetail() {
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [confirmConfig, setConfirmConfig] = useState(null);
 
   // Editing state (for Drafts only)
   const [isEditing, setIsEditing] = useState(false);
@@ -74,10 +76,17 @@ export default function HandoverDetail() {
   }, [id, session]);
 
   // Handle Submit Handover (Draft -> Submitted)
-  const handleSubmitHandover = async () => {
-    if (!window.confirm('Are you sure you want to submit this shift handover for incoming shift review?')) {
-      return;
-    }
+  const requestSubmitConfirmation = () => {
+    setConfirmConfig({
+      title: 'Submit Shift Handover',
+      message: 'Are you sure you want to submit this shift handover for incoming shift review? Once submitted, the draft cannot be edited until reviewed.',
+      confirmText: 'Submit Handover',
+      confirmVariant: 'primary',
+      onConfirm: executeSubmitHandover
+    });
+  };
+
+  const executeSubmitHandover = async () => {
     setActionLoading(true);
     setError(null);
     try {
@@ -91,19 +100,28 @@ export default function HandoverDetail() {
         throw new Error(result.message || 'Failed to submit handover');
       }
       setSuccessMessage('Shift handover successfully submitted for acknowledgement.');
+      setConfirmConfig(null);
       fetchHandoverDetail();
     } catch (err) {
       setError(err.message);
+      setConfirmConfig(null);
     } finally {
       setActionLoading(false);
     }
   };
 
   // Handle Acknowledge Handover (Submitted -> Acknowledged)
-  const handleAcknowledgeHandover = async () => {
-    if (!window.confirm('Do you confirm that you have inspected and verified the shift conditions and accept handover?')) {
-      return;
-    }
+  const requestAcknowledgeConfirmation = () => {
+    setConfirmConfig({
+      title: 'Acknowledge Shift Handover',
+      message: 'Do you confirm that you have inspected and verified the shift conditions and accept handover? Once acknowledged, this record becomes an immutable statutory entry.',
+      confirmText: 'Acknowledge & Sign Off',
+      confirmVariant: 'success',
+      onConfirm: executeAcknowledgeHandover
+    });
+  };
+
+  const executeAcknowledgeHandover = async () => {
     setActionLoading(true);
     setError(null);
     try {
@@ -117,9 +135,11 @@ export default function HandoverDetail() {
         throw new Error(result.message || 'Failed to acknowledge handover');
       }
       setSuccessMessage('Shift handover successfully acknowledged and verified. Record is now locked.');
+      setConfirmConfig(null);
       fetchHandoverDetail();
     } catch (err) {
       setError(err.message);
+      setConfirmConfig(null);
     } finally {
       setActionLoading(false);
     }
@@ -273,7 +293,7 @@ export default function HandoverDetail() {
           </div>
           {canAcknowledge && (
             <button
-              onClick={handleAcknowledgeHandover}
+              onClick={requestAcknowledgeConfirmation}
               disabled={actionLoading}
               className="inline-flex items-center justify-center gap-1.5 bg-status-success hover:bg-emerald-700 text-white px-4 py-2 rounded text-xs font-medium transition-colors self-start sm:self-auto shrink-0 shadow-sm"
             >
@@ -324,12 +344,12 @@ export default function HandoverDetail() {
             )}
             {canSubmitDraft && (
               <button
-                onClick={handleSubmitHandover}
+                onClick={requestSubmitConfirmation}
                 disabled={actionLoading}
                 className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white px-3.5 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>{actionLoading ? 'Submitting...' : 'Submit Handover'}</span>
+                <span>Submit Handover</span>
               </button>
             )}
           </div>
@@ -571,6 +591,20 @@ export default function HandoverDetail() {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmConfig && (
+        <ConfirmDialog
+          isOpen={Boolean(confirmConfig)}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          confirmText={confirmConfig.confirmText}
+          confirmVariant={confirmConfig.confirmVariant}
+          loading={actionLoading}
+          onConfirm={confirmConfig.onConfirm}
+          onCancel={() => setConfirmConfig(null)}
+        />
+      )}
     </div>
   );
 }
