@@ -4,6 +4,7 @@ const healthRoutes = require('./routes/health');
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const handoverRoutes = require('./routes/handover');
+const smpRoutes = require('./routes/smp');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/handover', handoverRoutes);
+app.use('/api/smp', smpRoutes);
 
 // 404 Handler
 app.use((req, res) => {
