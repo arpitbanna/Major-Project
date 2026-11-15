@@ -26,7 +26,7 @@
 | **Database & Auth** | Supabase (PostgreSQL 15 + Supabase Auth) | Row Level Security (RLS), ACID triggers, immutable statutory logs |
 | **Document Engine** | `pdfmake` | Server-side statutory PDF generation with standard Helvetica typography |
 | **Security** | `helmet`, `express-rate-limit`, JWT Bearer tokens | Defense-in-depth header protection and API throttling |
-| **Testing** | Node.js native test runner (`node:test`), Supertest, Vitest | 26 unit and end-to-end integration tests |
+| **Testing** | Node.js native test runner (`node:test`), Supertest, Vitest | 36 unit and end-to-end integration tests |
 
 ---
 
@@ -209,23 +209,26 @@ npm run dev
 
 ## 7. Automated Testing Suite
 
-The repository contains 26 comprehensive automated tests verifying all business rules, role guards, and calculation matrices:
+The repository contains **36 comprehensive automated tests** verifying all business rules, role guards, and calculation matrices:
 
 ```bash
 # Run all tests across backend and frontend:
 npm test
 ```
 
-- **Backend (`node:test`) — 22 Tests**:
+- **Backend (`node:test`) — 25 Tests**:
   - API authentication guards and 401 rejection on unprotected requests.
   - End-to-end live Supabase authentication for all 4 roles.
   - Role-based authorization tests (Admin access vs Supervisor 403 denial).
   - Shift Handover 4-eyes cross-shift acknowledgement and tamper lock enforcement.
   - Safety Management Plan hazard lifecycle and manager verification.
   - 5×5 risk matrix calculation boundary testing.
+  - Coal mines catalog stats and search API verification.
   - Read-only ERP API key authentication.
-- **Frontend (`vitest`) — 4 Tests**:
+- **Frontend (`vitest`) — 11 Tests**:
   - Client-side 5×5 risk score and color badge calculation mappings.
+  - Safe API request handler, status code validation, and error parsing.
+  - Google OAuth client redirect and error handling flows.
 
 ---
 
