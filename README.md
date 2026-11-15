@@ -150,7 +150,47 @@ VITE_API_URL=/api
 > npm run seed:mines  # Populates real-world coal mines dataset
 > ```
 
-### Step 3: Install Dependencies & Run
+### Step 3: Google OAuth Setup (Optional / Production Auth)
+
+CoalSafe supports both Email/Password authentication and **Google OAuth 2.0**:
+
+#### 1. Google Cloud Console Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) -> **APIs & Services** -> **Credentials**.
+2. Click **Create Credentials** -> **OAuth client ID**.
+3. Select **Application type**: `Web application`.
+4. Name: `CoalSafe Mine Management`.
+5. Under **Authorized redirect URIs**, add your Supabase project callback URL:
+   ```
+   https://<your-project-id>.supabase.co/auth/v1/callback
+   ```
+   *(For this project: `https://rtvgylbzffqopokrqgee.supabase.co/auth/v1/callback`)*
+6. Click **Create** and copy your **Client ID** and **Client Secret**.
+
+#### 2. Supabase Provider Configuration
+1. Open your **Supabase Dashboard** -> **Authentication** -> **Providers** -> **Google**.
+2. Toggle **Enable Google provider** to `ON`.
+3. Paste your **Client ID** and **Client Secret**.
+4. Click **Save**.
+
+#### 3. Supabase Redirect URL Configuration
+In Supabase Dashboard -> **Authentication** -> **URL Configuration**:
+- **Site URL**: `http://localhost:5173` (or your production frontend URL).
+- **Redirect URLs** (add the following):
+  ```
+  http://localhost:5173/
+  http://localhost:5173/login
+  http://localhost:5173/auth/callback
+  https://your-production-domain.com/
+  https://your-production-domain.com/auth/callback
+  ```
+
+#### 4. Security & Role Policy for Google Signups
+- As enforced by the PostgreSQL trigger `handle_new_user()` in `schema.sql`, new Google signups are **strictly assigned the baseline `Supervisor` role**.
+- Administrative and managerial privileges (`Admin`, `Mine Manager`) **cannot** be acquired through OAuth self-registration; they must be explicitly granted by an authorized Administrator in the Admin portal.
+
+---
+
+### Step 4: Install Dependencies & Run
 ```bash
 # Install dependencies in both folders
 cd backend && npm install

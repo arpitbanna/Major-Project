@@ -49,10 +49,10 @@ async function requireAuth(req, res, next) {
     req.user = user;
     req.profile = profile || {
       id: user.id,
-      full_name: user.email.split('@')[0],
+      full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0],
       role: 'Supervisor',
-      designation: 'Staff',
-      mine_section: 'General',
+      designation: 'Mining Operations Staff',
+      mine_section: 'Central Operations',
       is_active: true
     };
 

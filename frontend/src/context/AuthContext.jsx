@@ -112,6 +112,37 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  // Google OAuth Login handler
+  const loginWithGoogle = async (redirectTo) => {
+    setError(null);
+
+    if (!isSupabaseConfigured || !supabase) {
+      const msg = 'Supabase credentials are not configured. Please configure SUPABASE_URL and SUPABASE_ANON_KEY in frontend/.env';
+      setError(msg);
+      throw new Error(msg);
+    }
+
+    const targetUrl = redirectTo || `${window.location.origin}/`;
+
+    const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: targetUrl,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    });
+
+    if (oauthError) {
+      setError(oauthError.message);
+      throw oauthError;
+    }
+
+    return data;
+  };
+
   // Logout handler
   const logout = async () => {
     setError(null);
@@ -137,6 +168,7 @@ export function AuthProvider({ children }) {
     error,
     isConfigured: isSupabaseConfigured,
     login,
+    loginWithGoogle,
     logout,
   };
 

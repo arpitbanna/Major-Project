@@ -89,16 +89,41 @@ CREATE POLICY "Admins can view all profiles"
 -- When a user is created via Supabase Auth, populate user_profiles
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_role TEXT;
+  v_full_name TEXT;
 BEGIN
-  INSERT INTO public.user_profiles (id, full_name, role, designation, mine_section)
+  -- Extract full name from raw_user_meta_data (Google OAuth provides 'full_name' or 'name')
+  v_full_name := COALESCE(
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.raw_user_meta_data->>'name',
+    split_part(NEW.email, '@', 1)
+  );
+
+  -- Safe default role: Google OAuth users ALWAYS receive baseline non-privileged 'Supervisor' role
+  -- Privileged roles (Admin, Mine Manager) must be explicitly assigned by an Admin
+  IF NEW.raw_app_meta_data->>'provider' = 'google' THEN
+    v_role := 'Supervisor';
+  ELSE
+    -- For internal provisioned accounts, enforce allowed role or fallback to 'Supervisor'
+    v_role := CASE
+      WHEN NEW.raw_user_meta_data->>'role' IN ('Admin', 'Mine Manager', 'Shift In-charge', 'Supervisor') THEN NEW.raw_user_meta_data->>'role'
+      ELSE 'Supervisor'
+    END;
+  END IF;
+
+  INSERT INTO public.user_profiles (id, full_name, role, designation, mine_section, is_active)
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'Supervisor'),
-    COALESCE(NEW.raw_user_meta_data->>'designation', 'Overman / Sirdar'),
-    COALESCE(NEW.raw_user_meta_data->>'mine_section', 'Section A')
+    v_full_name,
+    v_role,
+    COALESCE(NEW.raw_user_meta_data->>'designation', 'Mining Operations Staff'),
+    COALESCE(NEW.raw_user_meta_data->>'mine_section', 'Central Operations'),
+    true
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = COALESCE(public.user_profiles.full_name, EXCLUDED.full_name);
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

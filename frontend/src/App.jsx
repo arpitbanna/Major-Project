@@ -13,6 +13,7 @@ import CreateHazard from './pages/CreateHazard';
 import HazardDetail from './pages/HazardDetail';
 import Reports from './pages/Reports';
 import AdminUsers from './pages/AdminUsers';
+import AuthCallback from './pages/AuthCallback';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route
               path="/handover"
               element={

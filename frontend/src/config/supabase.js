@@ -11,6 +11,11 @@ export const isSupabaseConfigured = Boolean(
   !supabaseAnonKey.includes('your-anon-key')
 );
 
+// In Node test environments, provide a fallback WebSocket transport if native browser WebSocket is absent
+const realtimeConfig = typeof WebSocket === 'undefined'
+  ? { realtime: { transport: class MockWebSocketClient {} } }
+  : {};
+
 // Create client if configured, otherwise null
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
@@ -18,5 +23,6 @@ export const supabase = isSupabaseConfigured
         persistSession: true,
         autoRefreshToken: true,
       },
+      ...realtimeConfig
     })
   : null;

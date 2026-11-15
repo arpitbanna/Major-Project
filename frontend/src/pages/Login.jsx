@@ -4,7 +4,7 @@ import { LogIn, Eye, EyeOff, AlertCircle, ShieldAlert, CheckCircle2 } from 'luci
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
-  const { login, isConfigured, user } = useAuth();
+  const { login, loginWithGoogle, isConfigured, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -12,6 +12,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Target path to redirect after successful login
@@ -23,6 +24,18 @@ export default function Login() {
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
+
+  // Check if redirected with an OAuth error
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
+    const errorDesc = params.get('error_description') || hashParams.get('error_description');
+    const errorMsg = params.get('error') || hashParams.get('error');
+
+    if (errorDesc || errorMsg) {
+      setErrorMessage(`Google Sign-In failed: ${decodeURIComponent(errorDesc || errorMsg)}`);
+    }
+  }, [location]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,6 +61,26 @@ export default function Login() {
       setErrorMessage(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setErrorMessage('');
+
+    if (!isConfigured) {
+      setErrorMessage(
+        'Supabase is not configured yet. Please configure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in frontend/.env'
+      );
+      return;
+    }
+
+    setGoogleSubmitting(true);
+    try {
+      const callbackUrl = `${window.location.origin}/auth/callback`;
+      await loginWithGoogle(callbackUrl);
+    } catch (err) {
+      setErrorMessage(err.message || 'Google authentication could not be initiated.');
+      setGoogleSubmitting(false);
     }
   };
 
@@ -145,6 +178,56 @@ export default function Login() {
             )}
           </button>
         </form>
+
+        {/* Subtle OR Divider */}
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-borderLight"></div>
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-2.5 text-slateText-muted uppercase tracking-wider text-[10px] font-semibold">
+              OR
+            </span>
+          </div>
+        </div>
+
+        {/* Continue with Google Button */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={submitting || googleSubmitting || !isConfigured}
+          className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 text-slateText border border-borderLight hover:border-slate-300 py-2 px-4 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          aria-label="Continue with Google"
+        >
+          {googleSubmitting ? (
+            <span className="inline-flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <span>Connecting to Google...</span>
+            </span>
+          ) : (
+            <>
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                <path
+                  fill="#4285F4"
+                  d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.66-5.17 3.66-9.12z"
+                />
+                <path
+                  fill="#34A853"
+                  d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.07.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.13C3.27 21.39 7.35 24 12 24z"
+                />
+                <path
+                  fill="#FBBC05"
+                  d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.13z"
+                />
+                <path
+                  fill="#EA4335"
+                  d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.27 2.61 1.25 6.58l4.03 3.13c.95-2.83 3.6-4.96 6.72-4.96z"
+                />
+              </svg>
+              <span>Continue with Google</span>
+            </>
+          )}
+        </button>
 
         {/* Demo Viva Accounts Quick Autofill (DEMO ONLY) */}
         <div className="border-t border-borderLight pt-4 space-y-2 text-xs">
