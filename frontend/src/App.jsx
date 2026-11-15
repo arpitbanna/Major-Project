@@ -12,6 +12,7 @@ import SmpList from './pages/SmpList';
 import CreateHazard from './pages/CreateHazard';
 import HazardDetail from './pages/HazardDetail';
 import Reports from './pages/Reports';
+import AdminUsers from './pages/AdminUsers';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -82,10 +83,7 @@ export default function App() {
               path="/admin/users"
               element={
                 <ProtectedRoute allowedRoles={['Admin']}>
-                  <div className="bg-white border border-borderLight rounded p-6 text-sm text-slateText-secondary space-y-2">
-                    <h2 className="text-base font-semibold text-slateText">User Management</h2>
-                    <p>Administrator console for managing mine personnel, designations, and role assignments.</p>
-                  </div>
+                  <AdminUsers />
                 </ProtectedRoute>
               }
             />
