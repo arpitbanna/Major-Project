@@ -45,14 +45,14 @@ async function requireAuth(req, res, next) {
       console.error('[Auth Middleware] Profile lookup error:', profileError.message);
     }
 
-    // Default profile fallback if profile record was not created yet
+    // Default profile fallback if profile record was not created yet (least privileged role)
     req.user = user;
     req.profile = profile || {
       id: user.id,
-      full_name: user.user_metadata?.full_name || user.email.split('@')[0],
-      role: user.user_metadata?.role || 'Supervisor',
-      designation: user.user_metadata?.designation || 'Staff',
-      mine_section: user.user_metadata?.mine_section || 'General',
+      full_name: user.email.split('@')[0],
+      role: 'Supervisor',
+      designation: 'Staff',
+      mine_section: 'General',
       is_active: true
     };
 
