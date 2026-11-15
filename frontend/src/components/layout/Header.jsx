@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, ShieldAlert, LogOut, User, LogIn } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import CoalSafeLogo from '../common/CoalSafeLogo';
 
 export default function Header({ onToggleSidebar }) {
   const { user, profile, role, logout } = useAuth();
@@ -32,15 +33,13 @@ export default function Header({ onToggleSidebar }) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-primary text-white flex items-center justify-center font-bold text-sm">
-            CM
-          </div>
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <CoalSafeLogo size={34} />
           <div>
-            <h1 className="text-base font-semibold text-slateText leading-tight">
-              Coal Mine Management
+            <h1 className="text-base font-bold text-slateText leading-tight group-hover:text-primary transition-colors">
+              Coal<span className="text-primary">Safe</span>
             </h1>
-            <p className="text-xs text-slateText-secondary">
+            <p className="text-[11px] text-slateText-secondary leading-tight">
               Productivity & Safety System
             </p>
           </div>

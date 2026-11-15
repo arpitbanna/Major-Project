@@ -11,6 +11,7 @@ import {
   LogIn
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import CoalSafeLogo from '../common/CoalSafeLogo';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, profile, role } = useAuth();
@@ -109,9 +110,14 @@ export default function Sidebar({ isOpen, onClose }) {
         }`}
       >
         <div>
-          {/* Mobile close button */}
+          {/* Mobile brand & close button */}
           <div className="h-16 px-4 flex items-center justify-between border-b border-borderLight md:hidden">
-            <span className="text-sm font-semibold text-slateText">Menu</span>
+            <div className="flex items-center gap-2">
+              <CoalSafeLogo size={28} />
+              <span className="text-sm font-bold text-slateText">
+                Coal<span className="text-primary">Safe</span>
+              </span>
+            </div>
             <button
               onClick={onClose}
               className="p-1.5 text-slateText-secondary hover:text-slateText rounded hover:bg-background"
@@ -182,8 +188,11 @@ export default function Sidebar({ isOpen, onClose }) {
           )}
 
           <div className="pt-1 text-[11px] text-slateText-muted flex items-center justify-between">
-            <span>CMPDI System v1.0</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-status-success"></span>
+            <span>CoalSafe v1.0 • CMPDI</span>
+            <span className="inline-flex items-center gap-1 text-[10px] text-status-success font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-status-success"></span>
+              Live
+            </span>
           </div>
         </div>
       </aside>
