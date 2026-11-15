@@ -146,14 +146,70 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Roles information helper */}
-        <div className="border-t border-borderLight pt-4 text-xs text-slateText-secondary space-y-1.5">
-          <p className="font-semibold text-slateText">Supported Roles:</p>
-          <div className="grid grid-cols-2 gap-1 text-[11px]">
-            <div>• Mine Manager</div>
-            <div>• Shift In-charge</div>
-            <div>• Supervisor</div>
-            <div>• Admin</div>
+        {/* Demo Viva Accounts Quick Autofill (DEMO ONLY) */}
+        <div className="border-t border-borderLight pt-4 space-y-2 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-slateText">Quick Demo Fill</span>
+            <span className="text-[10px] font-bold tracking-wider uppercase bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded">
+              DEMO ONLY
+            </span>
+          </div>
+          <p className="text-[11px] text-slateText-secondary leading-snug">
+            Select a role to populate standard test credentials for examination demonstration:
+          </p>
+
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('admin@colliery.in');
+                setPassword('CoalSafe@2026');
+                setErrorMessage('');
+              }}
+              className="p-2 border border-borderLight hover:border-purple-300 rounded text-left hover:bg-purple-50 transition-colors"
+            >
+              <span className="font-semibold text-purple-700 block text-[11px]">Admin</span>
+              <span className="text-[10px] text-slateText-muted block truncate">admin@colliery.in</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('manager@colliery.in');
+                setPassword('CoalSafe@2026');
+                setErrorMessage('');
+              }}
+              className="p-2 border border-borderLight hover:border-blue-300 rounded text-left hover:bg-blue-50 transition-colors"
+            >
+              <span className="font-semibold text-primary block text-[11px]">Mine Manager</span>
+              <span className="text-[10px] text-slateText-muted block truncate">manager@colliery.in</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('incharge@colliery.in');
+                setPassword('CoalSafe@2026');
+                setErrorMessage('');
+              }}
+              className="p-2 border border-borderLight hover:border-emerald-300 rounded text-left hover:bg-emerald-50 transition-colors"
+            >
+              <span className="font-semibold text-status-success block text-[11px]">Shift In-charge</span>
+              <span className="text-[10px] text-slateText-muted block truncate">incharge@colliery.in</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('supervisor@colliery.in');
+                setPassword('CoalSafe@2026');
+                setErrorMessage('');
+              }}
+              className="p-2 border border-borderLight hover:border-slate-300 rounded text-left hover:bg-slate-50 transition-colors"
+            >
+              <span className="font-semibold text-slateText block text-[11px]">Supervisor</span>
+              <span className="text-[10px] text-slateText-muted block truncate">supervisor@colliery.in</span>
+            </button>
           </div>
         </div>
       </div>
