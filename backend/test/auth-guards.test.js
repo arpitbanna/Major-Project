@@ -40,6 +40,21 @@ describe('API Route Protection & Authentication Guards', () => {
     assert.strictEqual(res.body.status, 'error');
   });
 
+  it('GET /api/erp/status without x-api-key should return 401', async () => {
+    const res = await request(app).get('/api/erp/status');
+    assert.strictEqual(res.status, 401);
+    assert.strictEqual(res.body.status, 'error');
+  });
+
+  it('GET /api/erp/status with valid x-api-key should return 200 and system details', async () => {
+    const res = await request(app)
+      .get('/api/erp/status')
+      .set('x-api-key', 'coalsafe-erp-secret-2024');
+    assert.strictEqual(res.status, 200);
+    assert.strictEqual(res.body.status, 'ok');
+    assert.strictEqual(res.body.system, 'CoalSafe Colliery Management System');
+  });
+
   it('GET /api/unknown-endpoint should return 404', async () => {
     const res = await request(app).get('/api/unknown-endpoint');
     assert.strictEqual(res.status, 404);

@@ -1,5 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+
 const healthRoutes = require('./routes/health');
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
@@ -7,8 +10,29 @@ const handoverRoutes = require('./routes/handover');
 const smpRoutes = require('./routes/smp');
 const reportRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
+const erpRoutes = require('./routes/erp');
 
 const app = express();
+
+// Security Headers
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false
+  })
+);
+
+// Standard API Rate Limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // Limit each IP to 300 requests per 15 min window
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 'error',
+    message: 'Too many requests from this client. Please retry later.'
+  }
+});
+app.use('/api', apiLimiter);
 
 // Middleware
 app.use(cors({
@@ -25,6 +49,7 @@ app.use('/api/handover', handoverRoutes);
 app.use('/api/smp', smpRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/erp', erpRoutes);
 
 // 404 Handler
 app.use((req, res) => {
